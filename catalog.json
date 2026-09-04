@@ -1,0 +1,66 @@
+{
+  "source": "https://github.com/CommonPaper",
+  "license": "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+  "templates": [
+    {
+      "name": "Mutual Non-Disclosure Agreement (Standard Terms)",
+      "description": "Common Paper standard Mutual NDA Standard Terms (v1.0): mutual confidentiality obligations allowing each party to disclose confidential information for a defined purpose. Completed by signing a cover page that incorporates these terms.",
+      "filename": "mutual-nda.md"
+    },
+    {
+      "name": "Mutual Non-Disclosure Agreement (Cover Page)",
+      "description": "Fill-in cover page that incorporates the Common Paper Mutual NDA Standard Terms by reference to form an executable MNDA, with fields for purpose, term, governing law, and the parties.",
+      "filename": "mutual-nda-coverpage.md"
+    },
+    {
+      "name": "Cloud Service Agreement",
+      "description": "Common Paper standard Cloud Service Agreement (CSA) Standard Terms for providing access to a hosted software/cloud service, covering access and use, support, customer content, security, warranties, indemnification, and liability.",
+      "filename": "cloud-service-agreement.md"
+    },
+    {
+      "name": "Service Level Agreement",
+      "description": "Common Paper standard Service Level Agreement Standard Terms covering target uptime, downtime calculation, support response times, and service credits. Designed to pair with the Cloud Service Agreement.",
+      "filename": "service-level-agreement.md"
+    },
+    {
+      "name": "Data Processing Agreement",
+      "description": "Common Paper standard Data Processing Agreement governing processing of personal data between the parties as controller, processor, and subprocessor, including international transfers and data subject rights.",
+      "filename": "data-processing-agreement.md"
+    },
+    {
+      "name": "Design Partner Agreement",
+      "description": "Common Paper standard Design Partner Agreement for giving early-access customers use of a pre-release product in exchange for structured feedback under a design partner program.",
+      "filename": "design-partner-agreement.md"
+    },
+    {
+      "name": "Professional Services Agreement",
+      "description": "Common Paper standard Professional Services Agreement Standard Terms for delivering professional services under statements of work (SOWs), including change orders, acceptance, subcontractors, and IP ownership of deliverables.",
+      "filename": "professional-services-agreement.md"
+    },
+    {
+      "name": "Partnership Agreement",
+      "description": "Common Paper standard Partnership Agreement for two companies collaborating on mutually defined obligations, with optional fees, revenue share, intellectual property, and marketing terms.",
+      "filename": "partnership-agreement.md"
+    },
+    {
+      "name": "Business Associate Agreement",
+      "description": "Common Paper standard Business Associate Agreement addressing HIPAA obligations for the use, disclosure, and safeguarding of Protected Health Information (PHI) between a covered entity and its service provider.",
+      "filename": "business-associate-agreement.md"
+    },
+    {
+      "name": "Software License Agreement",
+      "description": "Common Paper standard Software License Agreement Standard Terms for licensing installed or on-premises software, covering the license grant, open source software, support, warranties, and liability.",
+      "filename": "software-license-agreement.md"
+    },
+    {
+      "name": "Pilot Agreement",
+      "description": "Common Paper standard Pilot Agreement for short-term, limited-scope product evaluations before entering a full commercial agreement, with an order form for scope, pilot period, and evaluation purpose.",
+      "filename": "pilot-agreement.md"
+    },
+    {
+      "name": "AI Addendum",
+      "description": "Common Paper standard AI Addendum that supplements an existing agreement with terms for AI services, inputs and outputs, model training and improvement, and related intellectual property and privacy obligations.",
+      "filename": "ai-addendum.md"
+    }
+  ]
+}

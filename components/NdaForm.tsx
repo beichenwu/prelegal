@@ -6,7 +6,11 @@ import type {
   NdaFormValues,
   PartyDetails,
 } from "@/lib/mutualNda";
+import { COMMON_JURISDICTIONS, US_STATES } from "@/lib/locations";
 import styles from "./NdaForm.module.css";
+
+const STATES_LIST_ID = "nda-us-states";
+const JURISDICTIONS_LIST_ID = "nda-jurisdictions";
 
 interface NdaFormProps {
   values: NdaFormValues;
@@ -53,6 +57,8 @@ export function NdaForm({ values, errors, onChange }: NdaFormProps) {
               className={cx(styles.input, errorFor("governingLaw") && styles.invalid)}
               value={values.governingLaw}
               placeholder="Delaware"
+              list={STATES_LIST_ID}
+              autoComplete="off"
               onChange={(e) => set("governingLaw", e.target.value)}
             />
           </Field>
@@ -66,6 +72,8 @@ export function NdaForm({ values, errors, onChange }: NdaFormProps) {
               className={cx(styles.input, errorFor("jurisdiction") && styles.invalid)}
               value={values.jurisdiction}
               placeholder="New Castle, Delaware"
+              list={JURISDICTIONS_LIST_ID}
+              autoComplete="off"
               onChange={(e) => set("jurisdiction", e.target.value)}
             />
           </Field>
@@ -171,6 +179,17 @@ export function NdaForm({ values, errors, onChange }: NdaFormProps) {
         errorFor={errorFor}
         onChange={(patch) => setParty("party2", patch)}
       />
+
+      <datalist id={STATES_LIST_ID}>
+        {US_STATES.map((state) => (
+          <option key={state} value={state} />
+        ))}
+      </datalist>
+      <datalist id={JURISDICTIONS_LIST_ID}>
+        {COMMON_JURISDICTIONS.map((place) => (
+          <option key={place} value={place} />
+        ))}
+      </datalist>
     </form>
   );
 }

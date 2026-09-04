@@ -118,3 +118,6 @@ logs/
 tmp/
 temp/
 .cache/
+
+# Claude Code local config
+.claude/

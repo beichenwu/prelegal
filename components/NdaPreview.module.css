@@ -1,0 +1,77 @@
+.doc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 44px;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text);
+  overflow-wrap: break-word;
+}
+
+.doc h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.6em;
+}
+
+.doc h2 {
+  font-size: 1.2rem;
+  margin: 1.4em 0 0.5em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.2em;
+}
+
+.doc h3 {
+  font-size: 1rem;
+  margin: 1.1em 0 0.3em;
+}
+
+.doc p {
+  margin: 0 0 0.9em;
+}
+
+.doc ol,
+.doc ul {
+  padding-left: 1.4em;
+}
+
+.doc li {
+  margin-bottom: 0.6em;
+}
+
+.doc hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+
+.doc table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0 1em;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+
+.doc th,
+.doc td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc a {
+  color: var(--accent);
+  word-break: break-all;
+}
+
+@media print {
+  .doc {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    font-size: 11pt;
+  }
+}

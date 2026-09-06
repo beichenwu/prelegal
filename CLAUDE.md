@@ -11,8 +11,10 @@ The available documents are catalogued in `frontend/catalog.json`, included here
 
 @frontend/catalog.json
 
-The source templates live in `frontend/templates/` (Common Paper standards,
-CC BY 4.0).
+`catalog.json` is the human-readable index; the machine-readable per-document
+definitions (fields, parties, template filenames) live in `frontend/documents/`,
+and the source Markdown in `frontend/templates/` (Common Paper standards,
+CC BY 4.0, plus adapted `*-cover.md` fill pages).
 
 ### Product vision
 

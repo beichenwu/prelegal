@@ -84,10 +84,11 @@ Dockerfile  Multi-stage: node:20 builds frontend/out -> python:3.12-slim runs
   `extract_fields()` (non-streamed JSON, one retry, keeps prior fields on failure).
   Raises `LLMUnavailable` (no key) / `LLMError` (provider/parse failure).
 - `api/routes.py` — `APIRouter(prefix="/api")`. `GET /api/health` does a real
-  DB round-trip; `GET /api/nda/chat` reports whether chat is configured;
-  `POST /api/nda/chat` streams `token` events then one `result` event
-  (`reply`, `fields`, `missingFields`, `readyToGenerate`) or an `error` event.
-  An `/api/*` catch-all keeps unknown API paths as JSON 404s.
+  DB round-trip; `GET /api/nda/chat` returns `{"enabled": bool}` (is a key
+  configured); `POST /api/nda/chat` streams `token` events then one `result`
+  event (`reply`, `fields`, `missingFields`, `readyToGenerate`, `degraded`) or
+  an `error` event (`code`: `unavailable` | `provider`). An `/api/*` catch-all
+  keeps unknown API paths as JSON 404s.
 - `main.py` — app factory + lifespan. CORS allows `localhost:3000` for `next dev`.
 
 ### Database
@@ -101,10 +102,15 @@ created the same way (recreated each start).
 ## AI design
 
 Call LLMs through **LiteLLM → OpenRouter**, using a free model. `OPENROUTER_API_KEY`
-is in `.env` at the project root; with no key the chat endpoint reports itself
-disabled and the UI falls back to the form. The default model
-(`PRELEGAL_LLM_MODEL`) is a currently-free instruction model that supports JSON
-responses — swap it if OpenRouter's free tier changes.
+is in `.env` at the project root; with no key the chat endpoint reports
+`enabled: false` and the UI shows the guided form instead. The frontend also
+distinguishes "not configured" from "endpoint unreachable" (wrong server, backend
+down, `NEXT_PUBLIC_API_BASE` unset) and offers a retry for the latter.
+
+The default model (`PRELEGAL_LLM_MODEL`) is currently
+`openrouter/nvidia/nemotron-3-super-120b-a12b:free` — it supports JSON responses.
+`meta-llama/llama-3.3-70b-instruct:free` is no longer free on OpenRouter; swap
+the default again if the free tier changes.
 
 The Mutual NDA chat (`app/llm.py`) uses two calls per turn: a streamed
 conversational reply, and a separate non-streamed JSON call that re-reads the
@@ -165,6 +171,6 @@ cd backend  && uv run ruff check . && uv run pytest
 | [SCRUM-6](https://beichenwu4667.atlassian.net/browse/SCRUM-6) | Mutual NDA creator (prototype) | `/tools/mutual-nda/` — a form for the cover-page terms and both parties, a live-rendered agreement, and Markdown download / print-to-PDF. All client-side (`frontend/lib/mutualNda.ts`). | #4 |
 | [SCRUM-7](https://beichenwu4667.atlassian.net/browse/SCRUM-7) | Input improvement | Autocomplete for the city and governing-law fields in the NDA form: a suggestion list appears on partial input (`frontend/lib/locations.ts`). | #6 |
 | [SCRUM-8](https://beichenwu4667.atlassian.net/browse/SCRUM-8) | V1 product foundation | `frontend/` + `backend/` split; FastAPI serving the static export plus `/api/*`; throwaway SQLite recreated each startup; `GET /api/health`; multi-stage Dockerfile; mac/linux/windows start-stop scripts; CI split into frontend / backend / docker jobs. No auth, no feature port. | #7 |
-| [SCRUM-9](https://beichenwu4667.atlassian.net/browse/SCRUM-9) | AI chat | Streaming freechat mode on the NDA tool (toggle beside the guided form). `POST /api/nda/chat` (SSE) via LiteLLM → OpenRouter; backend streams the reply and extracts fields, frontend merges them into the same live preview. AI asks permission before "generate". Conversation client-side only. NDA only. | #8 |
+| [SCRUM-9](https://beichenwu4667.atlassian.net/browse/SCRUM-9) | AI chat | Streaming freechat mode on the NDA tool (toggle beside the guided form). `POST /api/nda/chat` (SSE) via LiteLLM → OpenRouter; backend streams the reply and extracts fields, frontend merges them into the same live preview. AI asks permission before "generate". Conversation client-side only. NDA only. | branch `feature/SCRUM-9-ai-chat`, PR pending |
 
 Backlog (not started): **SCRUM-10** support all catalogued document types · **SCRUM-11** auth, registration, per-user dashboard of past documents, preview-only disclaimer.

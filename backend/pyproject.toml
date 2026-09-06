@@ -1,0 +1,32 @@
+[project]
+name = "prelegal-backend"
+version = "0.1.0"
+description = "Prelegal API — FastAPI backend that serves the static frontend and bootstraps a throwaway SQLite database."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "sqlalchemy>=2.0",
+    "pydantic-settings>=2.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.27",
+    "ruff>=0.8",
+]
+
+[tool.uv]
+# Application, not a library — nothing to build or install for the project itself.
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

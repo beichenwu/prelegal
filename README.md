@@ -1,58 +1,93 @@
 # Prelegal
 
-A small web app for contract groundwork before it reaches the lawyers.
+A web app for contract groundwork before it reaches the lawyers. Users draft
+legal agreements from trusted standard templates, fill in the terms, and export a
+signature-ready document.
 
-The first tool is a **Mutual NDA creator**: a user fills in the key terms and
-both parties' details, sees the completed agreement render live, and downloads
-it (Markdown, or print to PDF). It is built on the Common Paper Mutual NDA
-Standard Terms v1.0 stored in [`templates/`](./templates).
+The first tool is a **Mutual NDA creator** built on the Common Paper Mutual NDA
+Standard Terms v1.0. More document types from [`frontend/templates/`](./frontend/templates)
+are next.
 
-## Stack
+## Layout
 
-- [Next.js](https://nextjs.org) 15 (App Router) + React 19 + TypeScript
-- Static export (`output: "export"`) — no server needed
-- `react-markdown` for the live document preview
-- `vitest` for unit tests
+```
+frontend/     Next.js 15 (App Router) + React 19 + TypeScript, static export
+backend/      FastAPI + SQLAlchemy, uv-managed; serves the built frontend and the API
+scripts/      Docker start/stop wrappers for macOS, Linux, Windows
+Dockerfile    Multi-stage build: Node builds the frontend -> Python serves everything
+```
 
-## Getting started
+At runtime a single FastAPI process serves the static frontend at `/` and the API
+under `/api/*`. The database is a throwaway SQLite file, **dropped and recreated
+on every startup** — there are no migrations. There is no user auth yet.
+
+## Run it (Docker)
+
+Docker is the supported way to run the whole app. It listens on
+**http://localhost:8000**.
 
 ```bash
+# macOS
+scripts/start-mac.sh
+scripts/stop-mac.sh
+
+# Linux
+scripts/start-linux.sh
+scripts/stop-linux.sh
+```
+
+```powershell
+# Windows
+scripts/start-windows.ps1
+scripts/stop-windows.ps1
+```
+
+`start-*` builds the image and runs a container named `prelegal`; `stop-*` removes
+it. If a `.env` file is present at the repo root it is passed to the container.
+
+Check it is up:
+
+```bash
+curl http://localhost:8000/api/health
+# {"status":"ok","database":"ok","initialized_at":"..."}
+```
+
+## Local development (no Docker)
+
+Two processes, hot-reloading independently.
+
+```bash
+# Terminal 1 — API on :8000
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload
+
+# Terminal 2 — frontend dev server on :3000
+cd frontend
 npm install
-npm run dev        # http://localhost:3000
+npm run dev
 ```
 
-The NDA creator lives at `/tools/mutual-nda`.
+The frontend dev server proxies nothing — call the API at
+`http://localhost:8000/api/*` directly during development. To exercise the
+production path (FastAPI serving the built site), run `npm run build` in
+`frontend/` and load `http://localhost:8000`.
 
-## Scripts
+## Checks
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start the dev server |
-| `npm run build` | Static production build into `out/` |
-| `npm run lint` | ESLint (`next/core-web-vitals`) |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm test` | Run unit tests |
+```bash
+# frontend
+cd frontend && npm run lint && npm run typecheck && npm test && npm run build
 
-## Project structure
-
+# backend
+cd backend && uv run ruff check . && uv run pytest
 ```
-app/
-  layout.tsx                  Root layout, header/footer, metadata
-  page.tsx                    Home (placeholder until SCRUM-1)
-  tools/mutual-nda/page.tsx   Mutual NDA creator
-components/
-  NdaForm.tsx                 Controlled form for the cover-page fields
-  NdaPreview.tsx              Renders the assembled agreement Markdown
-lib/
-  mutualNda.ts                Document builder: templates, merge, validation
-  mutualNda.test.ts           Unit tests
-templates/                    Source legal templates (CC BY 4.0, see LICENSE.txt)
-catalog.json                  Index of the templates
-```
+
+CI runs all of the above plus `docker build` on every pull request.
 
 ## Notes
 
 Generated agreements are **drafts** derived from the
-[Common Paper Mutual NDA (v1.0)](https://commonpaper.com/standards/mutual-nda/1.0),
-used under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). This is a
-prototype and not legal advice.
+[Common Paper](https://commonpaper.com) standards, used under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). This is a prototype and
+not legal advice.

@@ -27,8 +27,8 @@ export default function RootLayout({
             </Link>
             <nav className="site-header__nav">
               <Link href="/">Home</Link>
-              <Link href="/#templates">Templates</Link>
-              <Link href="/tools/mutual-nda">Mutual NDA creator</Link>
+              <Link href="/#templates">Documents</Link>
+              <Link href="/tools/create">Create an agreement</Link>
             </nav>
           </div>
         </header>

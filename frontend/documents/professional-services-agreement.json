@@ -1,0 +1,74 @@
+{
+  "slug": "professional-services-agreement",
+  "label": "Professional Services Agreement",
+  "description": "Delivery of professional services under statements of work (SOWs), including change orders, acceptance, subcontractors and IP ownership of deliverables.",
+  "termsFile": "professional-services-agreement.md",
+  "coverFile": "professional-services-agreement-cover.md",
+  "parties": [
+    {
+      "key": "provider",
+      "label": "Provider"
+    },
+    {
+      "key": "customer",
+      "label": "Customer"
+    }
+  ],
+  "fields": [
+    {
+      "name": "effectiveDate",
+      "label": "Effective date",
+      "hint": "When the framework terms take effect"
+    },
+    {
+      "name": "statementOfWork",
+      "label": "First statement of work",
+      "hint": "Summary of the first SOW: scope, deliverables, fees"
+    },
+    {
+      "name": "sowTerm",
+      "label": "SOW term",
+      "hint": "Duration of the first SOW"
+    },
+    {
+      "name": "customerPolicies",
+      "label": "Customer policies",
+      "hint": "Any customer policies the provider must follow; 'none' if not"
+    },
+    {
+      "name": "governingLaw",
+      "label": "Governing law",
+      "hint": "US state whose law governs"
+    },
+    {
+      "name": "chosenCourts",
+      "label": "Chosen courts",
+      "hint": "City/county and state whose courts apply"
+    },
+    {
+      "name": "generalCapAmount",
+      "label": "General cap amount",
+      "hint": "Liability cap"
+    },
+    {
+      "name": "additionalWarranties",
+      "label": "Additional warranties",
+      "hint": "Any extra warranties; 'none' if not"
+    },
+    {
+      "name": "securityPolicy",
+      "label": "Security policy",
+      "hint": "Reference to an applicable security policy; 'n/a' if not"
+    },
+    {
+      "name": "insuranceMinimums",
+      "label": "Insurance minimums",
+      "hint": "Required insurance coverage; 'n/a' if not"
+    },
+    {
+      "name": "dpaAttached",
+      "label": "Data Processing Agreement",
+      "hint": "Whether a DPA is attached ('yes' / 'no')"
+    }
+  ]
+}

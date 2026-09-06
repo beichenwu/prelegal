@@ -1,0 +1,54 @@
+{
+  "slug": "mutual-nda",
+  "label": "Mutual Non-Disclosure Agreement",
+  "description": "Mutual confidentiality obligations letting each party disclose confidential information for a defined purpose, on the Common Paper Mutual NDA Standard Terms.",
+  "termsFile": "mutual-nda.md",
+  "coverFile": "mutual-nda-cover.md",
+  "parties": [
+    {
+      "key": "discloser",
+      "label": "Party 1"
+    },
+    {
+      "key": "recipient",
+      "label": "Party 2"
+    }
+  ],
+  "fields": [
+    {
+      "name": "purpose",
+      "label": "Purpose",
+      "hint": "Why the parties are sharing confidential information"
+    },
+    {
+      "name": "effectiveDate",
+      "label": "Effective date",
+      "hint": "When the NDA takes effect (a calendar date)"
+    },
+    {
+      "name": "mndaTerm",
+      "label": "MNDA term",
+      "hint": "How long the NDA lasts: a number of years, or 'until terminated'"
+    },
+    {
+      "name": "confidentialityTerm",
+      "label": "Term of confidentiality",
+      "hint": "How long confidentiality survives: a number of years, or perpetual"
+    },
+    {
+      "name": "governingLaw",
+      "label": "Governing law",
+      "hint": "US state whose law governs"
+    },
+    {
+      "name": "jurisdiction",
+      "label": "Jurisdiction",
+      "hint": "City or county and state whose courts apply"
+    },
+    {
+      "name": "modifications",
+      "label": "Modifications to the standard terms",
+      "hint": "Any changes; usually none"
+    }
+  ]
+}

@@ -34,3 +34,24 @@ following repositories:
   software-license-agreement.md        CommonPaper/Software-License-Agreement
   pilot-agreement.md                   CommonPaper/Pilot-Agreement
   ai-addendum.md                       CommonPaper/AI-Addendum
+
+Adaptations
+-----------
+The "*-cover.md" files are ADAPTATIONS, not unmodified copies. Common Paper
+publishes each agreement's Cover Page / Order Form only as DOCX / Google Doc,
+not as Markdown. These files were written for Prelegal as fill-in cover pages
+in Markdown, following the structure and field set Common Paper documents for
+each standard. They are derivative works under CC BY 4.0; changes were made.
+The corresponding "*.md" Standard Terms they incorporate remain unmodified.
+
+  mutual-nda-cover.md                  adapted from CommonPaper/Mutual-NDA
+  cloud-service-agreement-cover.md     adapted from CommonPaper/CSA
+  service-level-agreement-cover.md     adapted from CommonPaper/SLA
+  data-processing-agreement-cover.md   adapted from CommonPaper/DPA
+  design-partner-agreement-cover.md    adapted from CommonPaper/Design-Partner-Agreement
+  professional-services-agreement-cover.md  adapted from CommonPaper/PSA
+  partnership-agreement-cover.md       adapted from CommonPaper/Partnership-Agreement
+  business-associate-agreement-cover.md  adapted from CommonPaper/BAA
+  software-license-agreement-cover.md  adapted from CommonPaper/Software-License-Agreement
+  pilot-agreement-cover.md             adapted from CommonPaper/Pilot-Agreement
+  ai-addendum-cover.md                 adapted from CommonPaper/AI-Addendum

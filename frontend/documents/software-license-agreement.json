@@ -1,0 +1,89 @@
+{
+  "slug": "software-license-agreement",
+  "label": "Software License Agreement",
+  "description": "Licensing installed or on-premises software, covering the license grant, open source, support, warranties and liability.",
+  "termsFile": "software-license-agreement.md",
+  "coverFile": "software-license-agreement-cover.md",
+  "parties": [
+    {
+      "key": "provider",
+      "label": "Provider"
+    },
+    {
+      "key": "customer",
+      "label": "Customer"
+    }
+  ],
+  "fields": [
+    {
+      "name": "software",
+      "label": "Software",
+      "hint": "Short description of the licensed software"
+    },
+    {
+      "name": "orderDate",
+      "label": "Order date",
+      "hint": "When the license starts"
+    },
+    {
+      "name": "subscriptionPeriod",
+      "label": "Subscription period",
+      "hint": "Length of each license term"
+    },
+    {
+      "name": "fees",
+      "label": "License fees",
+      "hint": "Price and unit"
+    },
+    {
+      "name": "paymentProcess",
+      "label": "Payment process",
+      "hint": "Invoice or automatic; frequency; payment deadline"
+    },
+    {
+      "name": "nonRenewalNoticeDate",
+      "label": "Non-renewal notice date",
+      "hint": "Notice needed to stop auto-renewal"
+    },
+    {
+      "name": "permittedUses",
+      "label": "Permitted uses",
+      "hint": "What the customer may do with the software"
+    },
+    {
+      "name": "licenseLimits",
+      "label": "License limits",
+      "hint": "Seat / instance / volume limits; 'none' if unlimited"
+    },
+    {
+      "name": "effectiveDate",
+      "label": "Effective date",
+      "hint": "When the framework terms take effect"
+    },
+    {
+      "name": "governingLaw",
+      "label": "Governing law",
+      "hint": "US state whose law governs"
+    },
+    {
+      "name": "chosenCourts",
+      "label": "Chosen courts",
+      "hint": "City/county and state whose courts apply"
+    },
+    {
+      "name": "generalCapAmount",
+      "label": "General cap amount",
+      "hint": "Liability cap"
+    },
+    {
+      "name": "warrantyPeriod",
+      "label": "Warranty period",
+      "hint": "How long the software warranty lasts"
+    },
+    {
+      "name": "additionalWarranties",
+      "label": "Additional warranties",
+      "hint": "Any extra warranties; 'none' if not"
+    }
+  ]
+}

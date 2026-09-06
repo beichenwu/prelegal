@@ -1,6 +1,10 @@
 import Link from "next/link";
 import catalog from "@/catalog.json";
+import { DOCUMENT_CATALOG } from "@/lib/documents";
 import styles from "./page.module.css";
+
+const docHref = (slug: string) =>
+  slug === "mutual-nda" ? "/tools/mutual-nda" : `/tools/create?document=${slug}`;
 
 const features = [
   {
@@ -19,12 +23,12 @@ const features = [
 
 const steps = [
   {
-    title: "Pick a document",
-    body: "Choose from the template library — NDAs, service agreements, DPAs, and more.",
+    title: "Describe what you need",
+    body: "Tell the assistant the situation. It picks the right document from the library — NDAs, service agreements, DPAs, and more.",
   },
   {
-    title: "Fill the key terms",
-    body: "Parties, dates, term length, governing law. Plain-language fields, sensible defaults.",
+    title: "Answer a few questions",
+    body: "Parties, dates, term length, governing law, in plain language. The draft fills in as you go.",
   },
   {
     title: "Export and send",
@@ -44,11 +48,11 @@ export default function HomePage() {
             a signature-ready document without a billable hour in sight.
           </p>
           <div className={styles.heroActions}>
-            <Link className="button" href="/tools/mutual-nda">
-              Try the Mutual NDA creator
+            <Link className="button" href="/tools/create">
+              Create an agreement
             </Link>
             <Link className="button button--ghost" href="#templates">
-              Browse the template library
+              Browse the document library
             </Link>
           </div>
         </div>
@@ -93,32 +97,34 @@ export default function HomePage() {
 
       <section id="templates" className={styles.section}>
         <div className="container">
-          <h2 className={styles.sectionTitle}>Template library</h2>
+          <h2 className={styles.sectionTitle}>Document library</h2>
           <p className={styles.sectionLead}>
-            {catalog.templates.length} standard agreements from{" "}
+            {DOCUMENT_CATALOG.length} standard agreements from{" "}
             <a href={catalog.source}>Common Paper</a>, available under{" "}
-            {catalog.license.split(" (")[0]}. The Mutual NDA is live as a guided
-            tool today; the rest are next.
+            {catalog.license.split(" (")[0]}. All are live — pick one to start, or
+            let the assistant choose.
           </p>
           <ul className={styles.templateList}>
-            {catalog.templates.map((t) => (
-              <li key={t.filename} className={styles.templateItem}>
-                <p className={styles.templateName}>{t.name}</p>
-                <p className={styles.templateDesc}>{t.description}</p>
+            {DOCUMENT_CATALOG.map((d) => (
+              <li key={d.slug} className={styles.templateItem}>
+                <Link href={docHref(d.slug)} className={styles.templateName}>
+                  {d.label}
+                </Link>
+                <p className={styles.templateDesc}>{d.description}</p>
               </li>
             ))}
           </ul>
           <p className={styles.note}>
-            Templates are drafts to build on, not legal advice.
+            Drafts to build on, not legal advice.
           </p>
         </div>
       </section>
 
       <section className={styles.cta}>
         <div className="container">
-          <h2 className={styles.ctaTitle}>Start with a Mutual NDA</h2>
-          <Link className="button" href="/tools/mutual-nda">
-            Open the creator
+          <h2 className={styles.ctaTitle}>Create your first agreement</h2>
+          <Link className="button" href="/tools/create">
+            Open the assistant
           </Link>
         </div>
       </section>

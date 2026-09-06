@@ -107,6 +107,7 @@
 }
 
 .templateName {
+  display: inline-block;
   margin: 0 0 4px;
   font-size: 0.95rem;
   font-weight: 650;

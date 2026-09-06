@@ -1,0 +1,79 @@
+{
+  "slug": "partnership-agreement",
+  "label": "Partnership Agreement",
+  "description": "Two companies collaborating on mutually defined obligations, with optional fees, revenue share, intellectual property and marketing terms.",
+  "termsFile": "partnership-agreement.md",
+  "coverFile": "partnership-agreement-cover.md",
+  "parties": [
+    {
+      "key": "company",
+      "label": "Company"
+    },
+    {
+      "key": "partner",
+      "label": "Partner"
+    }
+  ],
+  "fields": [
+    {
+      "name": "effectiveDate",
+      "label": "Effective date",
+      "hint": "When the agreement takes effect"
+    },
+    {
+      "name": "purpose",
+      "label": "Purpose of the partnership",
+      "hint": "What the parties are collaborating on"
+    },
+    {
+      "name": "companyObligations",
+      "label": "Company obligations",
+      "hint": "What the Company will do"
+    },
+    {
+      "name": "partnerObligations",
+      "label": "Partner obligations",
+      "hint": "What the Partner will do"
+    },
+    {
+      "name": "feesAndRevenueShare",
+      "label": "Fees and revenue share",
+      "hint": "Any payments or revenue split; 'none' if not"
+    },
+    {
+      "name": "intellectualProperty",
+      "label": "Intellectual property",
+      "hint": "Who owns what is created; 'each retains its own' if simple"
+    },
+    {
+      "name": "brandGuidelines",
+      "label": "Brand guidelines",
+      "hint": "Reference to brand guidelines for marketing use; 'n/a' if not"
+    },
+    {
+      "name": "governingLaw",
+      "label": "Governing law",
+      "hint": "US state whose law governs"
+    },
+    {
+      "name": "chosenCourts",
+      "label": "Chosen courts",
+      "hint": "City/county and state whose courts apply"
+    },
+    {
+      "name": "generalCapAmount",
+      "label": "General cap amount",
+      "hint": "Liability cap"
+    },
+    {
+      "name": "additionalWarranties",
+      "label": "Additional warranties",
+      "hint": "Any extra warranties; 'none' if not"
+    },
+    {
+      "name": "dpaAttached",
+      "label": "Data Processing Agreement",
+      "hint": "Whether a DPA is attached ('yes' / 'no')"
+    }
+  ]
+}

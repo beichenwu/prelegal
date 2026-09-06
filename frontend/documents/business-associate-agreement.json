@@ -1,0 +1,39 @@
+{
+  "slug": "business-associate-agreement",
+  "label": "Business Associate Agreement",
+  "description": "HIPAA obligations for the use, disclosure and safeguarding of Protected Health Information (PHI) between a covered entity and its service provider.",
+  "termsFile": "business-associate-agreement.md",
+  "coverFile": "business-associate-agreement-cover.md",
+  "parties": [
+    {
+      "key": "company",
+      "label": "Covered Entity"
+    },
+    {
+      "key": "provider",
+      "label": "Business Associate"
+    }
+  ],
+  "fields": [
+    {
+      "name": "agreement",
+      "label": "Main agreement",
+      "hint": "The agreement this BAA attaches to"
+    },
+    {
+      "name": "baaEffectiveDate",
+      "label": "BAA effective date",
+      "hint": "When the BAA takes effect"
+    },
+    {
+      "name": "breachNotificationPeriod",
+      "label": "Breach notification period",
+      "hint": "How quickly a breach must be reported, e.g. 'within 5 business days'"
+    },
+    {
+      "name": "limitations",
+      "label": "Limitations on use or disclosure of PHI",
+      "hint": "Any narrower limits than HIPAA allows; 'none' if not"
+    }
+  ]
+}

@@ -56,6 +56,11 @@
   color: var(--text-muted);
 }
 
+.suggestRow {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .readyRow {
   display: flex;
   flex-wrap: wrap;

@@ -6,6 +6,11 @@ const nextConfig = {
   // `html=True` resolves clean URLs like `/tools/mutual-nda/` without extra config.
   trailingSlash: true,
   images: { unoptimized: true },
+  // Import `.md` templates as raw strings (used to assemble legal documents).
+  webpack(config) {
+    config.module.rules.push({ test: /\.md$/, type: "asset/source" });
+    return config;
+  },
 };
 
 export default nextConfig;

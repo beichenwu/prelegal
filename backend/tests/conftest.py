@@ -12,6 +12,7 @@ from pathlib import Path
 _TMP = Path(tempfile.mkdtemp(prefix="prelegal-test-"))
 
 os.environ.setdefault("PRELEGAL_DATABASE_URL", f"sqlite:///{_TMP / 'test.db'}")
+os.environ.setdefault("PRELEGAL_OPENROUTER_API_KEY", "test-key")
 
 _DIST = _TMP / "dist"
 (_DIST / "tools" / "mutual-nda").mkdir(parents=True, exist_ok=True)

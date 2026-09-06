@@ -13,6 +13,10 @@ const BLANK = "\\_\\_\\_\\_\\_\\_";
 const PARTY_TOKEN = /\{\{party\.([a-zA-Z]+)\.([a-zA-Z]+)\}\}/g;
 const FIELD_TOKEN = /\{\{([a-zA-Z0-9]+)\}\}/g;
 
+export const PREVIEW_DISCLAIMER =
+  "> **Preview only — not legal advice.** This draft was generated from a " +
+  "standard template. Have a qualified lawyer review it before signing.";
+
 /** Remove Common Paper's inline `<span …>` wrappers and demote the top `#`
  * heading to `##` so the terms nest under the cover page. */
 export function cleanStandardTerms(raw: string): string {
@@ -39,7 +43,9 @@ export function buildDocument(slug: string, values: DocValues): string {
       return value && value.trim() ? value.trim() : BLANK;
     });
 
-  return `${cover}\n\n---\n\n${cleanStandardTerms(doc.termsText)}\n`;
+  return `${PREVIEW_DISCLAIMER}\n\n${cover}\n\n---\n\n${cleanStandardTerms(
+    doc.termsText,
+  )}\n`;
 }
 
 /** Field names (from the document definition) that still have no value. */

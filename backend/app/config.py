@@ -24,8 +24,14 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # Throwaway SQLite file next to the backend; dropped and recreated on startup.
+    # SQLite file next to the backend. Persisted (see db.init_db); in Docker it
+    # lives on a mounted volume at /app/backend/data.
     database_url: str = f"sqlite:///{_BACKEND_DIR / 'prelegal.db'}"
+
+    # Signs auth tokens. MUST be set to a stable random value in production
+    # (PRELEGAL_SECRET_KEY) or tokens break on every restart.
+    secret_key: str = "dev-insecure-change-me-0000000000000000"
+    access_token_ttl_hours: int = 24 * 7
 
     # Static export produced by `npm run build` in ../frontend.
     frontend_dist: Path = _BACKEND_DIR.parent / "frontend" / "out"

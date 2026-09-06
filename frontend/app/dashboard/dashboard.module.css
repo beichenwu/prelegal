@@ -1,0 +1,97 @@
+.page {
+  padding: 40px 0 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.head h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 0.88rem;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: stretch;
+}
+
+.rowMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+}
+
+.rowMain:hover {
+  background: var(--surface-muted);
+}
+
+.docTitle {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.delete {
+  border: none;
+  border-left: 1px solid var(--border);
+  background: none;
+  padding: 0 16px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.delete:hover {
+  color: var(--danger);
+}
+
+.detail {
+  border-top: 1px solid var(--border);
+  padding: 16px;
+  background: var(--surface-muted);
+}
+
+.detailActions {
+  margin-bottom: 12px;
+}

@@ -1,7 +1,7 @@
 [project]
 name = "prelegal-backend"
 version = "0.1.0"
-description = "Prelegal API — FastAPI backend that serves the static frontend and bootstraps a throwaway SQLite database."
+description = "Prelegal API — FastAPI backend that serves the static frontend, the document chat, and user accounts."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
@@ -9,6 +9,9 @@ dependencies = [
     "sqlalchemy>=2.0",
     "pydantic-settings>=2.6",
     "litellm>=1.55",
+    "bcrypt>=4.1",
+    "pyjwt>=2.9",
+    "email-validator>=2.2",
 ]
 
 [dependency-groups]

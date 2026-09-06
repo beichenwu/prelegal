@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { NdaForm } from "@/components/NdaForm";
 import { NdaPreview } from "@/components/NdaPreview";
+import { RequireAuth } from "@/components/RequireAuth";
 import {
   DEFAULT_VALUES,
   buildAgreement,
@@ -12,7 +13,7 @@ import {
 } from "@/lib/mutualNda";
 import styles from "./mutual-nda.module.css";
 
-export default function MutualNdaPage() {
+function MutualNda() {
   const [values, setValues] = useState<NdaFormValues>(DEFAULT_VALUES);
 
   // Default the effective date to today, set after mount to avoid a
@@ -61,6 +62,11 @@ export default function MutualNdaPage() {
         </p>
       </div>
 
+      <p className="notice no-print">
+        Preview only — not legal advice. Have a qualified lawyer review the draft
+        before signing.
+      </p>
+
       <div className={styles.layout}>
         <div className="no-print">
           <NdaForm values={values} errors={errors} onChange={setValues} />
@@ -94,5 +100,13 @@ export default function MutualNdaPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function MutualNdaPage() {
+  return (
+    <RequireAuth>
+      <MutualNda />
+    </RequireAuth>
   );
 }

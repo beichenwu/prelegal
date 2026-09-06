@@ -30,11 +30,29 @@ os.environ.setdefault("PRELEGAL_FRONTEND_DIST", str(_DIST))
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
+from app.db import reset_db  # noqa: E402
 from app.main import app  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _fresh_db():
+    # The DB now persists across restarts, so isolate every test explicitly.
+    reset_db()
 
 
 @pytest.fixture
 def client():
-    # The context manager runs the lifespan: init_db() + the initialized_at stamp.
+    # The context manager runs the lifespan (init_db + the start stamp).
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def auth_headers(client):
+    """Register a throwaway user and return its bearer header."""
+    resp = client.post(
+        "/api/auth/register",
+        json={"email": "tester@example.com", "password": "password123"},
+    )
+    assert resp.status_code == 201, resp.text
+    return {"Authorization": f"Bearer {resp.json()['access_token']}"}

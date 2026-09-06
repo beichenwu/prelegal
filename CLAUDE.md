@@ -129,3 +129,15 @@ cd backend  && uv run ruff check . && uv run pytest
 - Purple Secondary: `#753991` (submit buttons)
 - Dark Navy: `#032147` (headings)
 - Gray Text: `#888888`
+
+## Delivered Jira tickets
+
+| Ticket | Summary | What shipped | PR |
+| --- | --- | --- | --- |
+| [SCRUM-1](https://beichenwu4667.atlassian.net/browse/SCRUM-1) | Marketing site | Static marketing landing page describing Prelegal — hero, "what it is", how-it-works, and a template-library listing driven by `catalog.json`. | #5 |
+| [SCRUM-5](https://beichenwu4667.atlassian.net/browse/SCRUM-5) | Template curation | One-time data task: pulled the Common Paper markdown agreement templates into `templates/`, generated `catalog.json` (name / description / filename per doc), added the CC BY 4.0 `LICENSE.txt`. | #3 |
+| [SCRUM-6](https://beichenwu4667.atlassian.net/browse/SCRUM-6) | Mutual NDA creator (prototype) | `/tools/mutual-nda/` — a form for the cover-page terms and both parties, a live-rendered agreement, and Markdown download / print-to-PDF. All client-side (`frontend/lib/mutualNda.ts`). | #4 |
+| [SCRUM-7](https://beichenwu4667.atlassian.net/browse/SCRUM-7) | Input improvement | Autocomplete for the city and governing-law fields in the NDA form: a suggestion list appears on partial input (`frontend/lib/locations.ts`). | #6 |
+| [SCRUM-8](https://beichenwu4667.atlassian.net/browse/SCRUM-8) | V1 product foundation | `frontend/` + `backend/` split; FastAPI serving the static export plus `/api/*`; throwaway SQLite recreated each startup; `GET /api/health`; multi-stage Dockerfile; mac/linux/windows start-stop scripts; CI split into frontend / backend / docker jobs. No auth, no feature port. | #7 |
+
+Backlog (not started): **SCRUM-9** freechat AI document completion · **SCRUM-10** support all catalogued document types · **SCRUM-11** auth, registration, per-user dashboard of past documents, preview-only disclaimer.

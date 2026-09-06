@@ -1,0 +1,25 @@
+# VCS / tooling
+.git
+.github
+.claude
+
+# Secrets — passed at runtime via --env-file, never baked into the image
+.env
+.env.*
+
+# Node / Next.js — reinstalled and rebuilt inside the image
+**/node_modules
+**/.next
+**/out
+
+# Python — recreated by `uv sync` inside the image
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+
+# Local databases and build metadata
+**/*.db
+**/*.sqlite3
+**/*.tsbuildinfo

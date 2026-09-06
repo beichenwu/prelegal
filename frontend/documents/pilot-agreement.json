@@ -1,0 +1,54 @@
+{
+  "slug": "pilot-agreement",
+  "label": "Pilot Agreement",
+  "description": "Short-term, limited-scope product evaluation before a full commercial agreement, with an order form for scope, pilot period and evaluation purpose.",
+  "termsFile": "pilot-agreement.md",
+  "coverFile": "pilot-agreement-cover.md",
+  "parties": [
+    {
+      "key": "provider",
+      "label": "Provider"
+    },
+    {
+      "key": "customer",
+      "label": "Customer"
+    }
+  ],
+  "fields": [
+    {
+      "name": "effectiveDate",
+      "label": "Effective date",
+      "hint": "When the pilot takes effect"
+    },
+    {
+      "name": "pilotPurpose",
+      "label": "Pilot purpose",
+      "hint": "What is being evaluated and the success criteria"
+    },
+    {
+      "name": "pilotPeriod",
+      "label": "Pilot period",
+      "hint": "How long the pilot runs, e.g. '60 days'"
+    },
+    {
+      "name": "fees",
+      "label": "Fees",
+      "hint": "Any pilot fee; 'none' if free"
+    },
+    {
+      "name": "governingLaw",
+      "label": "Governing law",
+      "hint": "US state whose law governs"
+    },
+    {
+      "name": "chosenCourts",
+      "label": "Chosen courts",
+      "hint": "City/county and state whose courts apply"
+    },
+    {
+      "name": "generalCapAmount",
+      "label": "General cap amount",
+      "hint": "Liability cap"
+    }
+  ]
+}

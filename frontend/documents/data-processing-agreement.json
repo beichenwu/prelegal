@@ -1,0 +1,79 @@
+{
+  "slug": "data-processing-agreement",
+  "label": "Data Processing Agreement",
+  "description": "Governs processing of personal data between the parties as controller, processor and subprocessor, including international transfers and data subject rights.",
+  "termsFile": "data-processing-agreement.md",
+  "coverFile": "data-processing-agreement-cover.md",
+  "parties": [
+    {
+      "key": "provider",
+      "label": "Provider (processor)"
+    },
+    {
+      "key": "customer",
+      "label": "Customer (controller)"
+    }
+  ],
+  "fields": [
+    {
+      "name": "agreement",
+      "label": "Main agreement",
+      "hint": "The agreement this DPA attaches to"
+    },
+    {
+      "name": "natureAndPurpose",
+      "label": "Nature and purpose of processing",
+      "hint": "What processing is done and why"
+    },
+    {
+      "name": "durationOfProcessing",
+      "label": "Duration of processing",
+      "hint": "How long personal data is processed"
+    },
+    {
+      "name": "categoriesOfDataSubjects",
+      "label": "Categories of data subjects",
+      "hint": "e.g. customer's end users, employees"
+    },
+    {
+      "name": "categoriesOfPersonalData",
+      "label": "Categories of personal data",
+      "hint": "e.g. contact details, usage data"
+    },
+    {
+      "name": "specialCategoryData",
+      "label": "Special category data",
+      "hint": "Whether special category data is processed ('yes' / 'no')"
+    },
+    {
+      "name": "specialCategoryDataSafeguards",
+      "label": "Special category data safeguards",
+      "hint": "Restrictions or safeguards if applicable; 'n/a' if not"
+    },
+    {
+      "name": "frequencyOfTransfer",
+      "label": "Frequency of transfer",
+      "hint": "e.g. continuous, batch"
+    },
+    {
+      "name": "approvedSubprocessors",
+      "label": "Approved subprocessors",
+      "hint": "List, or where the current list is maintained"
+    },
+    {
+      "name": "providerSecurityContact",
+      "label": "Provider security contact",
+      "hint": "Email for security matters"
+    },
+    {
+      "name": "securityPolicy",
+      "label": "Security policy",
+      "hint": "Reference to the applicable security policy"
+    },
+    {
+      "name": "governingMemberState",
+      "label": "Governing member state",
+      "hint": "EU member state whose law governs the SCCs, if applicable"
+    }
+  ]
+}

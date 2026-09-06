@@ -3,26 +3,24 @@ every other path."""
 
 import json
 from collections.abc import AsyncIterator
-from typing import Annotated, Literal
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.chat_schema import ChatRequest
 from app.config import settings
 from app.db import get_session
-from app.llm import (
-    ChatMessage,
-    ExtractionResult,
-    LLMError,
-    LLMUnavailable,
-    extract_fields,
-    stream_reply,
-)
+from app.llm import ChatMessage, LLMError, LLMUnavailable, extract_json, stream_reply
 from app.models import AppMeta
-from app.nda_schema import NdaFields, missing_required
+from app.prompts import (
+    fill_chat_prompt,
+    fill_extract_prompt,
+    triage_chat_prompt,
+    triage_extract_prompt,
+)
 
 router = APIRouter(prefix="/api")
 
@@ -42,32 +40,25 @@ def health(session: SessionDep) -> dict[str, str]:
     }
 
 
-# --- Mutual NDA AI chat --------------------------------------------------------
+# --- Document AI chat --------------------------------------------------------
 
 
-class ChatTurn(BaseModel):
-    role: Literal["user", "assistant"]
-    content: str = Field(min_length=1, max_length=8000)
-
-
-class NdaChatRequest(BaseModel):
-    messages: list[ChatTurn] = Field(min_length=1, max_length=40)
-    fields: NdaFields = NdaFields()
-
-
-@router.get("/nda/chat")
-def nda_chat_status() -> dict[str, bool]:
+@router.get("/chat")
+def chat_status() -> dict[str, bool]:
     """Whether the chat can run (i.e. an OpenRouter key is configured)."""
     return {"enabled": bool(settings.openrouter_api_key.strip())}
 
 
-@router.post("/nda/chat")
-async def nda_chat(body: NdaChatRequest) -> StreamingResponse:
-    """Stream the assistant reply, then a single ``result`` event carrying the
-    NDA fields extracted from the conversation so far."""
+@router.post("/chat")
+async def chat(body: ChatRequest) -> StreamingResponse:
+    """Stream the assistant reply, then a single ``result`` event.
+
+    Triage mode (no ``document``): the ``result`` carries the chosen slug.
+    Fill mode (``document`` set): the ``result`` carries the extracted fields.
+    """
     conversation: list[ChatMessage] = [m.model_dump() for m in body.messages]
     return StreamingResponse(
-        _chat_events(conversation, body.fields),
+        _chat_events(body, conversation),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
@@ -77,12 +68,30 @@ def _sse(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
 
+_EMPTY_RESULT = {
+    "reply": "",
+    "fields": {},
+    "missingFields": [],
+    "readyToGenerate": False,
+    "degraded": False,
+    "document": None,
+    "suggestion": None,
+}
+
+
 async def _chat_events(
-    conversation: list[ChatMessage], current: NdaFields
+    body: ChatRequest, conversation: list[ChatMessage]
 ) -> AsyncIterator[str]:
+    if body.document is None:
+        chat_prompt = triage_chat_prompt(body.catalog)
+        extract_prompt = triage_extract_prompt(body.catalog)
+    else:
+        chat_prompt = fill_chat_prompt(body.document)
+        extract_prompt = fill_extract_prompt(body.document)
+
     reply_parts: list[str] = []
     try:
-        async for delta in stream_reply(conversation):
+        async for delta in stream_reply(chat_prompt, conversation):
             reply_parts.append(delta)
             yield _sse("token", {"text": delta})
     except LLMUnavailable:
@@ -95,35 +104,67 @@ async def _chat_events(
     reply = "".join(reply_parts)
     turns = [*conversation, {"role": "assistant", "content": reply}]
 
+    result = {**_EMPTY_RESULT, "reply": reply}
     try:
-        result = await extract_fields(turns, current)
+        extracted = await extract_json(extract_prompt, turns)
     except LLMUnavailable:
         yield _sse("error", {"code": "unavailable", "message": _UNAVAILABLE_MSG})
         return
     except LLMError:
-        # The reply is fine; only extraction failed. Keep the known fields.
-        result = ExtractionResult(
-            fields=current, missing_fields=missing_required(current), degraded=True
-        )
+        result["degraded"] = True
+        if body.document is not None:
+            result["fields"] = dict(body.fields)
+            result["missingFields"] = _missing(body, body.fields)
+        yield _sse("result", result)
+        return
 
-    yield _sse(
-        "result",
-        {
-            "reply": reply,
-            "fields": result.fields.model_dump(),
-            "missingFields": result.missing_fields,
-            "readyToGenerate": result.ready_to_generate,
-            "degraded": result.degraded,
-        },
-    )
+    if body.document is None:
+        doc = extracted.get("document")
+        result["document"] = doc if isinstance(doc, str) else None
+        sug = extracted.get("suggestion")
+        result["suggestion"] = sug if isinstance(sug, str) else None
+    else:
+        merged = dict(body.fields)
+        # Field values: either a "fields" object, or (leniently) the whole object.
+        flat = extracted.get("fields")
+        if not isinstance(flat, dict):
+            flat = extracted
+        for key, value in flat.items():
+            if isinstance(value, str) and value.strip():
+                merged[key] = value.strip()
+        # Party details: a nested "parties" object -> "<key>.<attr>".
+        parties = extracted.get("parties")
+        if isinstance(parties, dict):
+            for pkey, attrs in parties.items():
+                if isinstance(attrs, dict):
+                    for attr, value in attrs.items():
+                        if isinstance(value, str) and value.strip():
+                            merged[f"{pkey}.{attr}"] = value.strip()
+        missing = _missing(body, merged)
+        result["fields"] = merged
+        result["missingFields"] = missing
+        result["readyToGenerate"] = bool(extracted.get("ready")) and not missing
+
+    yield _sse("result", result)
+
+
+def _missing(body: ChatRequest, values: dict[str, str]) -> list[str]:
+    if body.document is None:
+        return []
+    names = [f.name for f in body.document.fields]
+    names += [
+        f"{p.key}.{attr}"
+        for p in body.document.parties
+        for attr in ("signatory", "entity", "noticeAddress")
+    ]
+    return [n for n in names if not values.get(n, "").strip()]
 
 
 _UNAVAILABLE_MSG = (
-    "AI chat isn't configured on this server. Switch to the guided form to continue."
+    "AI chat isn't configured on this server. Add an OpenRouter API key to use it."
 )
 _PROVIDER_MSG = (
-    "The AI service is unavailable right now. Try again in a moment, "
-    "or switch to the guided form."
+    "The AI service is unavailable right now. Try again in a moment."
 )
 
 

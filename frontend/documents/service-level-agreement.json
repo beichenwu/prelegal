@@ -1,0 +1,54 @@
+{
+  "slug": "service-level-agreement",
+  "label": "Service Level Agreement",
+  "description": "Uptime target, downtime handling, support response times and service credits. Attaches to a Cloud Service Agreement.",
+  "termsFile": "service-level-agreement.md",
+  "coverFile": "service-level-agreement-cover.md",
+  "parties": [
+    {
+      "key": "provider",
+      "label": "Provider"
+    },
+    {
+      "key": "customer",
+      "label": "Customer"
+    }
+  ],
+  "fields": [
+    {
+      "name": "subscriptionPeriod",
+      "label": "Subscription period",
+      "hint": "The period this SLA covers"
+    },
+    {
+      "name": "targetUptime",
+      "label": "Target uptime",
+      "hint": "e.g. '99.9% per calendar month'"
+    },
+    {
+      "name": "scheduledDowntime",
+      "label": "Scheduled downtime",
+      "hint": "Allowed maintenance windows excluded from uptime"
+    },
+    {
+      "name": "uptimeCredit",
+      "label": "Uptime credit",
+      "hint": "Service credits owed when uptime targets are missed"
+    },
+    {
+      "name": "supportChannel",
+      "label": "Support channel",
+      "hint": "How the customer contacts support"
+    },
+    {
+      "name": "targetResponseTime",
+      "label": "Target response time",
+      "hint": "Response targets by severity"
+    },
+    {
+      "name": "responseTimeCredit",
+      "label": "Response time credit",
+      "hint": "Credits owed when response targets are missed"
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "slug": "cloud-service-agreement",
+  "label": "Cloud Service Agreement",
+  "description": "Terms for providing access to a hosted software / cloud service, covering access and use, support, security, warranties, indemnification and liability.",
+  "termsFile": "cloud-service-agreement.md",
+  "coverFile": "cloud-service-agreement-cover.md",
+  "parties": [
+    {
+      "key": "provider",
+      "label": "Provider"
+    },
+    {
+      "key": "customer",
+      "label": "Customer"
+    }
+  ],
+  "fields": [
+    {
+      "name": "cloudService",
+      "label": "Cloud service",
+      "hint": "Short description of the product being provided"
+    },
+    {
+      "name": "orderDate",
+      "label": "Order date",
+      "hint": "When access starts (a calendar date)"
+    },
+    {
+      "name": "subscriptionPeriod",
+      "label": "Subscription period",
+      "hint": "Length of each subscription term, e.g. '1 year'"
+    },
+    {
+      "name": "fees",
+      "label": "Cloud service fees",
+      "hint": "Price and unit, e.g. '$X per user per month'"
+    },
+    {
+      "name": "paymentProcess",
+      "label": "Payment process",
+      "hint": "Invoice or automatic; frequency; payment deadline"
+    },
+    {
+      "name": "nonRenewalNoticeDate",
+      "label": "Non-renewal notice date",
+      "hint": "How far before term end a party must give notice to stop auto-renewal"
+    },
+    {
+      "name": "useLimitations",
+      "label": "Use limitations",
+      "hint": "Any caps on usage; 'none' if unlimited"
+    },
+    {
+      "name": "technicalSupport",
+      "label": "Technical support",
+      "hint": "Support scope and channels"
+    },
+    {
+      "name": "effectiveDate",
+      "label": "Effective date",
+      "hint": "When the framework terms take effect"
+    },
+    {
+      "name": "governingLaw",
+      "label": "Governing law",
+      "hint": "US state whose law governs"
+    },
+    {
+      "name": "chosenCourts",
+      "label": "Chosen courts",
+      "hint": "City/county and state whose courts apply"
+    },
+    {
+      "name": "generalCapAmount",
+      "label": "General cap amount",
+      "hint": "Liability cap, e.g. 'fees paid in the prior 12 months'"
+    },
+    {
+      "name": "dpaAttached",
+      "label": "Data Processing Agreement",
+      "hint": "Whether a DPA is attached ('yes' / 'no')"
+    },
+    {
+      "name": "additionalWarranties",
+      "label": "Additional warranties",
+      "hint": "Any extra warranties; 'none' if not"
+    }
+  ]
+}

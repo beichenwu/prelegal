@@ -1,25 +1,40 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { NdaFormValues } from "@/lib/mutualNda";
+import { DOCUMENT_CATALOG } from "@/lib/documents";
 import {
-  applyExtracted,
   chatStatus,
-  streamNdaChat,
+  mergeFields,
+  streamChat,
   type ChatMessage,
   type ChatStatus,
-} from "@/lib/ndaChat";
-import styles from "./NdaChat.module.css";
+  type SelectedDocument,
+} from "@/lib/chat";
+import styles from "./DocChat.module.css";
 
-const STORAGE_KEY = "prelegal.nda.chat.v1";
+const STORAGE_KEY = "prelegal.chat.v1";
 
-interface NdaChatProps {
-  values: NdaFormValues;
-  errors: { field: string }[];
-  onChange: (next: NdaFormValues) => void;
+export interface DocChatResult {
+  /** Slug the assistant settled on during triage (null until it does). */
+  document: string | null;
+  /** All collected values so far (merged). */
+  fields: Record<string, string>;
+  ready: boolean;
+  missing: string[];
 }
 
-export function NdaChat({ values, errors, onChange }: NdaChatProps) {
+interface DocChatProps {
+  /** The chosen document, or null while still working out which one. */
+  document: SelectedDocument | null;
+  /** Values collected so far, owned by the page. */
+  values: Record<string, string>;
+  onResult: (result: DocChatResult) => void;
+}
+
+const labelFor = (slug: string) =>
+  DOCUMENT_CATALOG.find((d) => d.slug === slug)?.label ?? slug;
+
+export function DocChat({ document, values, onResult }: DocChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -27,17 +42,17 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
   const [status, setStatus] = useState<ChatStatus | "checking">("checking");
   const [ready, setReady] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Restore a prior conversation.
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) setMessages(JSON.parse(saved) as ChatMessage[]);
     } catch {
-      /* ignore unreadable storage */
+      /* ignore */
     }
   }, []);
 
@@ -54,60 +69,72 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     } catch {
-      /* ignore unwritable storage */
+      /* ignore */
     }
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages]);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  const send = useCallback(async () => {
-    const text = input.trim();
-    if (!text || streaming || status !== "enabled") return;
+  const send = useCallback(
+    async (text: string) => {
+      if (!text.trim() || streaming || status !== "enabled") return;
 
-    const history = [...messages, { role: "user" as const, content: text }];
-    setMessages([...history, { role: "assistant", content: "" }]);
-    setInput("");
-    setError(null);
-    setReady(false);
-    setStreaming(true);
+      const history = [...messages, { role: "user" as const, content: text.trim() }];
+      setMessages([...history, { role: "assistant", content: "" }]);
+      setInput("");
+      setError(null);
+      setReady(false);
+      setSuggestion(null);
+      setStreaming(true);
 
-    const controller = new AbortController();
-    abortRef.current = controller;
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    const appendToAssistant = (chunk: string) =>
-      setMessages((prev) => {
-        const next = [...prev];
-        next[next.length - 1] = {
-          role: "assistant",
-          content: next[next.length - 1].content + chunk,
-        };
-        return next;
-      });
-
-    for await (const event of streamNdaChat(history, values, controller.signal)) {
-      if (event.type === "token") {
-        appendToAssistant(event.text);
-      } else if (event.type === "result") {
-        onChange(applyExtracted(values, event.fields));
-        setReady(event.readyToGenerate);
+      const grow = (chunk: string) =>
         setMessages((prev) => {
           const next = [...prev];
-          next[next.length - 1] = { role: "assistant", content: event.reply };
+          next[next.length - 1] = {
+            role: "assistant",
+            content: next[next.length - 1].content + chunk,
+          };
           return next;
         });
-      } else {
-        setError(event.message);
-        if (event.code === "unavailable") setStatus("disabled");
-        setMessages((prev) =>
-          prev[prev.length - 1]?.content === "" ? prev.slice(0, -1) : prev,
-        );
-      }
-    }
 
-    setStreaming(false);
-    abortRef.current = null;
-  }, [input, streaming, status, messages, values, onChange]);
+      for await (const event of streamChat(
+        { catalog: DOCUMENT_CATALOG, document, messages: history, fields: values },
+        controller.signal,
+      )) {
+        if (event.type === "token") {
+          grow(event.text);
+        } else if (event.type === "result") {
+          setMessages((prev) => {
+            const next = [...prev];
+            next[next.length - 1] = { role: "assistant", content: event.reply };
+            return next;
+          });
+          setReady(event.readyToGenerate);
+          setSuggestion(event.suggestion);
+          onResult({
+            document: event.document,
+            fields: mergeFields(values, event.fields),
+            ready: event.readyToGenerate,
+            missing: event.missingFields,
+          });
+        } else {
+          setError(event.message);
+          if (event.code === "unavailable") setStatus("disabled");
+          setMessages((prev) =>
+            prev[prev.length - 1]?.content === "" ? prev.slice(0, -1) : prev,
+          );
+        }
+      }
+
+      setStreaming(false);
+      abortRef.current = null;
+    },
+    [streaming, status, messages, document, values, onResult],
+  );
 
   const reset = () => {
     abortRef.current?.abort();
@@ -115,6 +142,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
     setError(null);
     setReady(false);
     setConfirmed(false);
+    setSuggestion(null);
     setStreaming(false);
   };
 
@@ -123,8 +151,8 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
       <div className={styles.panel}>
         <p className={styles.disabled}>
           {status === "disabled"
-            ? "AI chat isn't configured on this server (no API key). Use the guided form to continue."
-            : "Can't reach the AI chat service. If the backend was just started, retry — otherwise use the guided form."}
+            ? "AI chat isn't configured on this server (no API key)."
+            : "Can't reach the AI chat service. If the backend was just started, retry."}
         </p>
         {status === "unreachable" ? (
           <button type="button" className="button button--ghost" onClick={probe}>
@@ -142,8 +170,9 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
       <div className={styles.transcript} ref={scrollRef}>
         {messages.length === 0 ? (
           <p className={styles.hello}>
-            Describe the NDA you need — who the parties are and why they&rsquo;re
-            sharing information — and I&rsquo;ll ask for the rest.
+            {document
+              ? `Tell me the key terms for your ${document.label} and I'll ask for the rest.`
+              : "What are you trying to put in place? Describe the situation and I'll pick the right document."}
           </p>
         ) : (
           messages.map((m, i) => (
@@ -158,6 +187,18 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
       </div>
 
       {error ? <p className={styles.error}>{error}</p> : null}
+
+      {suggestion && !document ? (
+        <div className={styles.suggestRow}>
+          <button
+            type="button"
+            className="button button--ghost"
+            onClick={() => void send(`Yes, let's use the ${labelFor(suggestion)}.`)}
+          >
+            Use the {labelFor(suggestion)} instead
+          </button>
+        </div>
+      ) : null}
 
       {ready && !confirmed ? (
         <div className={styles.readyRow}>
@@ -177,7 +218,6 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
                   },
                 ]);
               }}
-              disabled={errors.length > 0}
             >
               Generate draft
             </button>
@@ -196,7 +236,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
         className={styles.composer}
         onSubmit={(e) => {
           e.preventDefault();
-          void send();
+          void send(input);
         }}
       >
         <textarea
@@ -209,7 +249,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              void send();
+              void send(input);
             }
           }}
         />
@@ -222,11 +262,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
           >
             Reset chat
           </button>
-          <button
-            type="submit"
-            className="button"
-            disabled={!input.trim() || busy}
-          >
+          <button type="submit" className="button" disabled={!input.trim() || busy}>
             {streaming ? "…" : "Send"}
           </button>
         </div>

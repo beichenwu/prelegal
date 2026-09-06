@@ -1,0 +1,49 @@
+{
+  "slug": "ai-addendum",
+  "label": "AI Addendum",
+  "description": "Supplements an existing agreement with terms for AI services, inputs and outputs, model training and improvement, and related IP and privacy obligations.",
+  "termsFile": "ai-addendum.md",
+  "coverFile": "ai-addendum-cover.md",
+  "parties": [
+    {
+      "key": "provider",
+      "label": "Provider"
+    },
+    {
+      "key": "customer",
+      "label": "Customer"
+    }
+  ],
+  "fields": [
+    {
+      "name": "agreement",
+      "label": "Main agreement",
+      "hint": "The agreement this addendum supplements"
+    },
+    {
+      "name": "effectiveDate",
+      "label": "Effective date",
+      "hint": "When the addendum takes effect"
+    },
+    {
+      "name": "trainingPurposes",
+      "label": "Training purposes",
+      "hint": "What, if anything, the provider may train models on"
+    },
+    {
+      "name": "trainingData",
+      "label": "Training data",
+      "hint": "Which data may be used for training; 'none' if not permitted"
+    },
+    {
+      "name": "trainingRestrictions",
+      "label": "Training restrictions",
+      "hint": "Limits on training use; 'n/a' if training not permitted"
+    },
+    {
+      "name": "improvementRestrictions",
+      "label": "Improvement restrictions",
+      "hint": "Limits on using data to improve the service"
+    }
+  ]
+}

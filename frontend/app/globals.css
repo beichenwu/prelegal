@@ -80,7 +80,8 @@ a {
 
 .site-header__nav {
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 18px;
   font-size: 0.95rem;
 }
 
@@ -89,6 +90,27 @@ a {
 }
 
 .site-header__nav a:hover {
+  text-decoration: underline;
+}
+
+.site-header__user {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  max-width: 20ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-header__link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.site-header__link-button:hover {
   text-decoration: underline;
 }
 
@@ -124,9 +146,31 @@ button {
   color: var(--accent);
 }
 
+.button--sm {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
 .button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.auth-status {
+  padding: 48px 0;
+  color: var(--text-muted);
+}
+
+/* Standing "preview only" notice on the app pages. */
+.notice {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 /* Print: show only the generated agreement. */

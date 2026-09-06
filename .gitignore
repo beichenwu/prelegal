@@ -53,6 +53,7 @@ dmypy.json
 # FastAPI / ASGI
 *.sqlite3
 *.db
+backend/data/
 instance/
 celerybeat-schedule
 celerybeat.pid

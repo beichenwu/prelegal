@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildDocument, cleanStandardTerms, missingFields } from "./buildDocument";
+import {
+  buildDocument,
+  cleanStandardTerms,
+  missingFields,
+  PREVIEW_DISCLAIMER,
+} from "./buildDocument";
 import { DOCUMENTS } from "./documents";
 
 function fullValues(slug: string): Record<string, string> {
@@ -22,6 +27,7 @@ describe("buildDocument", () => {
       const md = buildDocument(slug, fullValues(slug));
       expect(md).not.toMatch(/\{\{/);
       expect(md).not.toMatch(/<span/);
+      expect(md).toContain(PREVIEW_DISCLAIMER);
       expect(md).toContain("\n\n---\n\n");
       expect(
         md.trimEnd().endsWith(cleanStandardTerms(doc.termsText).trimEnd()),

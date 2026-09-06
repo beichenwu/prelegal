@@ -19,16 +19,18 @@ CC BY 4.0, plus adapted `*-cover.md` fill pages).
 ### Product vision
 
 AI chat to help the user choose a document and fill its fields, all 11 document
-types, user accounts, and saved documents. The chat + all 11 documents are built
-(SCRUM-9, SCRUM-10); accounts and persistence are not (SCRUM-11). See **Current
-state**.
+types, user accounts, and saved documents — all built (SCRUM-9 / SCRUM-10 /
+SCRUM-11). See **Current state**.
 
 ## Current state
 
 Delivered:
 
-- **Marketing site** at `/` (Next.js static export). The document library lists
-  all 11 agreements, each linking into the creator.
+- **Marketing site** at `/` (public). The document library lists all 11
+  agreements, each linking into the creator.
+- **Accounts** (SCRUM-11) — email + password register / sign in (`/register`,
+  `/login`), JWT bearer tokens held in `localStorage`. The tools require a
+  signed-in user; the marketing pages stay public.
 - **AI document creator** at `/tools/create/` (SCRUM-9, SCRUM-10) — a streaming
   freechat that produces **any of the 11** Common Paper agreements:
   - **Triage**: the assistant asks the user's purpose, then picks the matching
@@ -36,17 +38,16 @@ Delivered:
   - **Fill**: it collects that document's fields and both parties conversationally.
   - The frontend assembles the draft (`lib/buildDocument.ts`) — fill the cover
     page's `{{token}}` placeholders, append the standard terms — and previews it
-    live. Conversation is client-side only (React state + `localStorage`).
+    live. A "Save to my documents" button (and download) persists it server-side.
+- **My documents** at `/dashboard` (SCRUM-11) — the signed-in user's saved
+  drafts: view inline, re-download, delete.
 - **Mutual NDA guided form** at `/tools/mutual-nda/` (SCRUM-6, SCRUM-7) — the
-  original hand-built form; unchanged. Links across to the AI creator.
+  original hand-built form; unchanged apart from the auth gate.
 - **`frontend/` + `backend/` foundation** (SCRUM-8): a FastAPI app serves the
-  static frontend at `/` and the API under `/api/*`, backed by a throwaway
-  SQLite database, packaged in a single Docker image, with start/stop scripts.
+  static frontend at `/` and the API under `/api/*`, packaged in a single Docker
+  image, with start/stop scripts.
 
-Not built yet:
-
-- User authentication — there is **no** `users` table, sign-up, or sign-in.
-- Backend persistence of documents (drafts live only in the browser).
+Not built yet: nothing on the current roadmap — SCRUM-1 and SCRUM-5..11 are done.
 
 ## Development process
 
@@ -72,11 +73,13 @@ frontend/   Next.js 15 (App Router) + React 19 + TypeScript.
                fill-in cover pages (`<slug>-cover.md`, `{{token}}` placeholders).
 backend/    FastAPI + SQLAlchemy 2.0, Python 3.12, uv-managed.
             Serves frontend/out at `/` (StaticFiles, html=True) and the API
-            under `/api/*`. Stateless re: documents — the frontend sends the
-            catalogue and field spec with each chat request. Tests: pytest.
+            under `/api/*`. The document chat is stateless (the frontend sends
+            the catalogue + field spec); users and saved documents live in
+            SQLite. Tests: pytest.
 scripts/    Docker start/stop wrappers (mac / linux / windows).
 Dockerfile  Multi-stage: node:20 builds frontend/out -> python:3.12-slim runs
-            uvicorn and serves the built files. Exposes :8000.
+            uvicorn and serves the built files. Exposes :8000. The SQLite DB is
+            on a VOLUME at /app/backend/data (named volume prelegal-data).
 ```
 
 ### Frontend document flow (`frontend/lib/`)
@@ -100,8 +103,16 @@ Dockerfile  Multi-stage: node:20 builds frontend/out -> python:3.12-slim runs
   the unprefixed `OPENROUTER_API_KEY`; the repo-root `.env` is loaded when present.
 - `db.py` — engine, `SessionLocal`, `Base`, `init_db()`, `get_session()`
   dependency.
-- `models.py` — SQLAlchemy models. Currently just `app_meta` (a bootstrap
-  key/value marker). Real domain tables arrive with the features that need them.
+- `models.py` — SQLAlchemy models: `app_meta` (bootstrap marker), `users`
+  (email, password_hash), `documents` (user_id, slug, title, values JSON,
+  markdown).
+- `auth.py` — bcrypt hashing, JWT mint/verify, the `current_user` dependency
+  (401 on missing / invalid / expired / unknown token).
+- `schemas.py` — auth + saved-document request/response models.
+- `api/auth.py` — `POST /api/auth/register` (409 on dup email), `POST
+  /api/auth/login`, `GET /api/auth/me`.
+- `api/documents.py` — owner-scoped `GET/POST /api/documents`, `GET/DELETE
+  /api/documents/{id}` (404 if not yours).
 - `chat_schema.py` — request models for `/api/chat` (`catalog`, optional
   `document` with its field/party spec, `messages`, `fields`).
 - `prompts.py` — triage vs fill system prompts, plus the JSON-only extraction
@@ -110,20 +121,22 @@ Dockerfile  Multi-stage: node:20 builds frontend/out -> python:3.12-slim runs
   and `extract_json(system, messages)` (non-streamed, one retry, then `LLMError`).
   Also raises `LLMUnavailable` when no key.
 - `api/routes.py` — `APIRouter(prefix="/api")`. `GET /api/health` does a real
-  DB round-trip; `GET /api/chat` returns `{"enabled": bool}`; `POST /api/chat`
-  streams `token` events then one `result` event (`reply`, `fields`,
-  `missingFields`, `readyToGenerate`, `degraded`, plus `document` / `suggestion`
-  in triage) or an `error` event (`code`: `unavailable` | `provider`). An
-  `/api/*` catch-all keeps unknown API paths as JSON 404s.
-- `main.py` — app factory + lifespan. CORS allows `localhost:3000` for `next dev`.
+  DB round-trip; `GET /api/chat` returns `{"enabled": bool}` (public); `POST
+  /api/chat` (**requires auth**) streams `token` events then one `result` event
+  (`reply`, `fields`, `missingFields`, `readyToGenerate`, `degraded`, plus
+  `document` / `suggestion` in triage) or an `error` event (`code`:
+  `unavailable` | `provider`). An `/api/*` catch-all keeps unknown API paths as
+  JSON 404s.
+- `main.py` — app factory + lifespan (creates missing tables, stamps
+  `last_started_at`). CORS allows `localhost:3000` for `next dev`.
 
 ### Database
 
-SQLite, **no migrations**. `init_db()` runs `drop_all` + `create_all` in the
-FastAPI lifespan on every startup, so each process — and each fresh Docker
-container — begins from a known-empty schema. Startup stamps an `initialized_at`
-row; `GET /api/health` reads it back. When auth lands, the `users` table is
-created the same way (recreated each start).
+SQLite, **no migrations**. `init_db()` runs `create_all` only — existing data is
+kept, so the file (a Docker named volume at `/app/backend/data`) **persists
+across restarts**. `reset_db()` (drop + recreate) is used only by tests, via an
+autouse fixture that isolates each one. `GET /api/health` reads back the startup
+marker row.
 
 ## AI design
 
@@ -137,6 +150,12 @@ The default model (`PRELEGAL_LLM_MODEL`) is currently
 `openrouter/nvidia/nemotron-3-super-120b-a12b:free` — it supports JSON responses.
 `meta-llama/llama-3.3-70b-instruct:free` is no longer free on OpenRouter; swap
 the default again if the free tier changes.
+
+OpenRouter's **free tier is capped account-wide at ~50 requests/day** (no
+credits). When it's exhausted the chat streams an `error` event and the UI shows
+"The AI service is unavailable" — this is expected degradation, not a bug. Unblock
+by waiting for the daily reset, adding $10 of credits (→ 1000/day), or pointing
+`PRELEGAL_LLM_MODEL` at a paid model. The Mutual NDA guided form needs no LLM.
 
 Each user turn is two calls: a streamed conversational reply, then a separate
 non-streamed `response_format: json_object` call that re-reads the whole
@@ -155,8 +174,12 @@ scripts/start-linux.sh   scripts/stop-linux.sh     # Linux
 scripts/start-windows.ps1 scripts/stop-windows.ps1 # Windows
 ```
 
-`start-*` builds the image and runs a container named `prelegal`; `stop-*`
-removes it. A root `.env`, if present, is passed to the container.
+`start-*` builds the image and runs a container named `prelegal` with the
+`prelegal-data` volume mounted; `stop-*` removes the container (the volume, and
+so the database, survives). A root `.env`, if present, is passed to the
+container — put `OPENROUTER_API_KEY` and `PRELEGAL_SECRET_KEY` there.
+`PRELEGAL_SECRET_KEY` must be a stable random value or every auth token breaks on
+restart.
 
 Local development (no Docker):
 
@@ -198,7 +221,8 @@ cd backend  && uv run ruff check . && uv run pytest
 | [SCRUM-6](https://beichenwu4667.atlassian.net/browse/SCRUM-6) | Mutual NDA creator (prototype) | `/tools/mutual-nda/` — a form for the cover-page terms and both parties, a live-rendered agreement, and Markdown download / print-to-PDF. All client-side (`frontend/lib/mutualNda.ts`). | #4 |
 | [SCRUM-7](https://beichenwu4667.atlassian.net/browse/SCRUM-7) | Input improvement | Autocomplete for the city and governing-law fields in the NDA form: a suggestion list appears on partial input (`frontend/lib/locations.ts`). | #6 |
 | [SCRUM-8](https://beichenwu4667.atlassian.net/browse/SCRUM-8) | V1 product foundation | `frontend/` + `backend/` split; FastAPI serving the static export plus `/api/*`; throwaway SQLite recreated each startup; `GET /api/health`; multi-stage Dockerfile; mac/linux/windows start-stop scripts; CI split into frontend / backend / docker jobs. No auth, no feature port. | #7 |
-| [SCRUM-9](https://beichenwu4667.atlassian.net/browse/SCRUM-9) | AI chat | Streaming freechat that fills a document from conversation. `POST /api/chat` (SSE) via LiteLLM → OpenRouter; backend streams the reply and extracts fields, frontend assembles + previews. AI asks permission before "generate". Client-side only. Shipped for the NDA; generalised by SCRUM-10. | branch `feature/SCRUM-9-ai-chat`, PR pending |
-| [SCRUM-10](https://beichenwu4667.atlassian.net/browse/SCRUM-10) | All 11 documents | `/tools/create/` generic AI creator: triage picks the document (or suggests the closest for unsupported asks), then fill collects its fields. Data-driven `frontend/documents/*.json` + adapted `*-cover.md` fill pages + generic `buildDocument`. `/api/nda/chat` → `/api/chat`. NDA guided form kept, unchanged. | branch `feature/SCRUM-10-all-documents`, PR pending |
+| [SCRUM-9](https://beichenwu4667.atlassian.net/browse/SCRUM-9) | AI chat | Streaming freechat that fills a document from conversation. `POST /api/chat` (SSE) via LiteLLM → OpenRouter; backend streams the reply and extracts fields, frontend assembles + previews. AI asks permission before "generate". Client-side only. Shipped for the NDA; generalised by SCRUM-10. | #8 |
+| [SCRUM-10](https://beichenwu4667.atlassian.net/browse/SCRUM-10) | All 11 documents | `/tools/create/` generic AI creator: triage picks the document (or suggests the closest for unsupported asks), then fill collects its fields. Data-driven `frontend/documents/*.json` + adapted `*-cover.md` fill pages + generic `buildDocument`. `/api/nda/chat` → `/api/chat`. NDA guided form kept, unchanged. | #9 |
+| [SCRUM-11](https://beichenwu4667.atlassian.net/browse/SCRUM-11) | Accounts + dashboard | Email/password register + sign in (JWT), `users` + `documents` tables, `/dashboard` for saved drafts (view / re-download / delete), tools gated behind login. SQLite now persists (no drop-on-startup; Docker volume). Preview-only disclaimer in the footer, on the app pages, and appended to every generated document. | #10 |
 
-Backlog (not started): **SCRUM-11** auth, registration, per-user dashboard of past documents, preview-only disclaimer.
+Backlog: none — SCRUM-1 and SCRUM-5 through SCRUM-11 are all done.

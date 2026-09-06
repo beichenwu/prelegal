@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { AuthProvider } from "@/components/AuthProvider";
+import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,41 +10,28 @@ export const metadata: Metadata = {
     template: "%s · Prelegal",
   },
   description:
-    "Prelegal helps teams handle contracts before they reach the lawyers — starting with a Mutual NDA creator.",
+    "Prelegal helps teams draft standard business agreements before they reach the lawyers.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <header className="site-header">
-          <div className="container site-header__inner">
-            <Link href="/" className="site-header__brand">
-              Prelegal
-            </Link>
-            <nav className="site-header__nav">
-              <Link href="/">Home</Link>
-              <Link href="/#templates">Documents</Link>
-              <Link href="/tools/create">Create an agreement</Link>
-            </nav>
-          </div>
-        </header>
-        {children}
-        <footer className="site-footer">
-          <div className="container">
-            <p>
-              Prototype. Generated agreements are drafts based on the{" "}
-              <a href="https://commonpaper.com/standards/mutual-nda/1.0">
-                Common Paper Mutual NDA (v1.0)
-              </a>
-              , used under CC&nbsp;BY&nbsp;4.0. Not legal advice.
-            </p>
-          </div>
-        </footer>
+        <AuthProvider>
+          <SiteHeader />
+          {children}
+          <footer className="site-footer">
+            <div className="container">
+              <p>
+                <strong>Preview only.</strong> Generated agreements are drafts
+                built from{" "}
+                <a href="https://commonpaper.com">Common Paper</a> standards
+                (CC&nbsp;BY&nbsp;4.0). They are not legal advice — have a
+                qualified lawyer review any document before you sign it.
+              </p>
+            </div>
+          </footer>
+        </AuthProvider>
       </body>
     </html>
   );

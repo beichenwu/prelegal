@@ -41,6 +41,16 @@ def _events(raw: str) -> list[tuple[str, dict]]:
     return out
 
 
+def post_chat(client, headers, *, document=None, messages=None, fields=None):
+    body = {
+        "catalog": CATALOG,
+        "document": document,
+        "messages": messages if messages is not None else [{"role": "user", "content": "hi"}],
+        "fields": fields or {},
+    }
+    return client.post("/api/chat", json=body, headers=headers)
+
+
 @pytest.fixture
 def fake_llm(monkeypatch):
     state = {"tokens": ["Hi", " there"], "extract": {}, "stream_exc": None, "extract_exc": None}
@@ -68,17 +78,15 @@ def test_status_reflects_key(client, monkeypatch):
     assert client.get("/api/chat").json() == {"enabled": False}
 
 
-def test_triage_streams_and_returns_slug(client, fake_llm):
+def test_chat_requires_auth(client, fake_llm):
+    assert post_chat(client, headers=None).status_code == 401
+
+
+def test_triage_streams_and_returns_slug(client, auth_headers, fake_llm):
     fake_llm["extract"] = {"document": "pilot-agreement", "suggestion": None}
 
-    response = client.post(
-        "/api/chat",
-        json={
-            "catalog": CATALOG,
-            "document": None,
-            "messages": [{"role": "user", "content": "I want to trial a product"}],
-            "fields": {},
-        },
+    response = post_chat(
+        client, auth_headers, messages=[{"role": "user", "content": "trial a product"}]
     )
 
     assert response.status_code == 200
@@ -90,26 +98,16 @@ def test_triage_streams_and_returns_slug(client, fake_llm):
     assert result["readyToGenerate"] is False
 
 
-def test_triage_suggests_closest_for_unsupported(client, fake_llm):
+def test_triage_suggests_closest_for_unsupported(client, auth_headers, fake_llm):
     fake_llm["extract"] = {"document": None, "suggestion": "mutual-nda"}
 
-    events = _events(
-        client.post(
-            "/api/chat",
-            json={
-                "catalog": CATALOG,
-                "document": None,
-                "messages": [{"role": "user", "content": "I need an employment contract"}],
-                "fields": {},
-            },
-        ).text
-    )
+    events = _events(post_chat(client, auth_headers).text)
     result = next(d for n, d in events if n == "result")
     assert result["document"] is None
     assert result["suggestion"] == "mutual-nda"
 
 
-def test_fill_merges_fields_and_reports_missing(client, fake_llm):
+def test_fill_merges_fields_and_reports_missing(client, auth_headers, fake_llm):
     fake_llm["extract"] = {
         "fields": {
             "purpose": "evaluate a deal",
@@ -121,14 +119,8 @@ def test_fill_merges_fields_and_reports_missing(client, fake_llm):
     }
 
     events = _events(
-        client.post(
-            "/api/chat",
-            json={
-                "catalog": CATALOG,
-                "document": NDA_DOC,
-                "messages": [{"role": "user", "content": "start"}],
-                "fields": {"governingLaw": "Delaware"},
-            },
+        post_chat(
+            client, auth_headers, document=NDA_DOC, fields={"governingLaw": "Delaware"}
         ).text
     )
     result = next(d for n, d in events if n == "result")
@@ -138,7 +130,7 @@ def test_fill_merges_fields_and_reports_missing(client, fake_llm):
     assert result["readyToGenerate"] is False
 
 
-def test_fill_ready_only_when_nothing_missing(client, fake_llm):
+def test_fill_ready_only_when_nothing_missing(client, auth_headers, fake_llm):
     fake_llm["extract"] = {
         "fields": {
             "purpose": "x",
@@ -153,60 +145,35 @@ def test_fill_ready_only_when_nothing_missing(client, fake_llm):
         "ready": True,
     }
 
-    events = _events(
-        client.post(
-            "/api/chat",
-            json={
-                "catalog": CATALOG,
-                "document": NDA_DOC,
-                "messages": [{"role": "user", "content": "here it all is"}],
-                "fields": {},
-            },
-        ).text
-    )
+    events = _events(post_chat(client, auth_headers, document=NDA_DOC).text)
     result = next(d for n, d in events if n == "result")
     assert result["missingFields"] == []
     assert result["readyToGenerate"] is True
 
 
-def _triage_body():
-    return {
-        "catalog": CATALOG,
-        "document": None,
-        "messages": [{"role": "user", "content": "hi"}],
-        "fields": {},
-    }
-
-
-def test_unavailable_when_stream_raises(client, fake_llm):
+def test_unavailable_when_stream_raises(client, auth_headers, fake_llm):
     from app.llm import LLMUnavailable
 
     fake_llm["stream_exc"] = LLMUnavailable("no key")
-    events = _events(client.post("/api/chat", json=_triage_body()).text)
+    events = _events(post_chat(client, auth_headers).text)
     assert [(n, d["code"]) for n, d in events] == [("error", "unavailable")]
 
 
-def test_provider_error_when_stream_raises(client, fake_llm):
+def test_provider_error_when_stream_raises(client, auth_headers, fake_llm):
     from app.llm import LLMError
 
     fake_llm["stream_exc"] = LLMError("503")
-    events = _events(client.post("/api/chat", json=_triage_body()).text)
+    events = _events(post_chat(client, auth_headers).text)
     assert [(n, d["code"]) for n, d in events] == [("error", "provider")]
 
 
-def test_extraction_failure_keeps_reply_and_fields(client, fake_llm):
+def test_extraction_failure_keeps_reply_and_fields(client, auth_headers, fake_llm):
     from app.llm import LLMError
 
     fake_llm["extract_exc"] = LLMError("bad json twice")
     events = _events(
-        client.post(
-            "/api/chat",
-            json={
-                "catalog": CATALOG,
-                "document": NDA_DOC,
-                "messages": [{"role": "user", "content": "hi"}],
-                "fields": {"purpose": "keep me"},
-            },
+        post_chat(
+            client, auth_headers, document=NDA_DOC, fields={"purpose": "keep me"}
         ).text
     )
     result = next(d for n, d in events if n == "result")
@@ -215,11 +182,8 @@ def test_extraction_failure_keeps_reply_and_fields(client, fake_llm):
     assert result["fields"]["purpose"] == "keep me"
 
 
-def test_rejects_empty_messages(client, fake_llm):
-    r = client.post(
-        "/api/chat",
-        json={"catalog": CATALOG, "document": None, "messages": [], "fields": {}},
-    )
+def test_rejects_empty_messages(client, auth_headers, fake_llm):
+    r = post_chat(client, auth_headers, messages=[])
     assert r.status_code == 422
 
 

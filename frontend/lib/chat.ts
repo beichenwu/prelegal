@@ -62,6 +62,8 @@ export type ChatEvent =
       message: string;
     };
 
+import { authHeaders } from "@/lib/auth";
+
 export type ChatStatus = "enabled" | "disabled" | "unreachable";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
@@ -96,7 +98,7 @@ export async function* streamChat(
   try {
     res = await fetch(`${API_BASE}/api/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify(request),
       signal,
     });

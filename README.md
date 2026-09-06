@@ -4,11 +4,12 @@ A web app for contract groundwork before it reaches the lawyers. Users draft
 legal agreements from trusted standard templates, fill in the terms, and export a
 signature-ready document.
 
-The **AI creator** at `/tools/create` produces any of the 11
+Sign up, then the **AI creator** at `/tools/create` produces any of the 11
 [Common Paper](https://commonpaper.com) standard agreements: describe what you
 need, the assistant picks the right document (or suggests the closest one it can
-make), then guides you through its terms while the draft fills in live. The
-Mutual NDA also keeps a dedicated **guided form** at `/tools/mutual-nda`.
+make), then guides you through its terms while the draft fills in live. Save
+drafts to your account and manage them from `/dashboard`. The Mutual NDA also
+keeps a dedicated **guided form** at `/tools/mutual-nda`.
 
 ## Layout
 
@@ -20,8 +21,10 @@ Dockerfile    Multi-stage build: Node builds the frontend -> Python serves every
 ```
 
 At runtime a single FastAPI process serves the static frontend at `/` and the API
-under `/api/*`. The database is a throwaway SQLite file, **dropped and recreated
-on every startup** — there are no migrations. There is no user auth yet.
+under `/api/*`. Accounts use email + password with JWT bearer tokens. The SQLite
+database (users + saved documents) **persists** across restarts — in Docker it
+lives on the `prelegal-data` named volume. There are no migrations; the schema is
+created on first run.
 
 ## Run it (Docker)
 
@@ -44,10 +47,14 @@ scripts/start-windows.ps1
 scripts/stop-windows.ps1
 ```
 
-`start-*` builds the image and runs a container named `prelegal`; `stop-*` removes
-it. If a `.env` file is present at the repo root it is passed to the container —
-that's how the AI creator gets its `OPENROUTER_API_KEY`. Without a key the creator
-reports itself unavailable; the Mutual NDA guided form still works offline.
+`start-*` builds the image and runs a container named `prelegal` with the
+`prelegal-data` volume; `stop-*` removes the container (the volume, and your
+data, stays). A repo-root `.env` is passed in — put two keys there:
+
+```
+OPENROUTER_API_KEY=...      # the AI creator; without it the creator is disabled
+PRELEGAL_SECRET_KEY=...     # signs auth tokens; use a stable random value
+```
 
 Check it is up:
 
@@ -79,8 +86,8 @@ NEXT_PUBLIC_API_BASE=http://localhost:8000
 ```
 
 in `frontend/.env.local`. (In the Docker/production path the API is same-origin,
-so this stays unset.) For the AI creator, also give the backend an
-`OPENROUTER_API_KEY` (the repo-root `.env` is picked up automatically).
+so this stays unset.) The backend picks up the repo-root `.env` automatically —
+set `OPENROUTER_API_KEY` for the creator and `PRELEGAL_SECRET_KEY` for auth.
 
 To exercise the production path (FastAPI serving the built site), run
 `npm run build` in `frontend/` and load `http://localhost:8000`.
@@ -99,7 +106,9 @@ CI runs all of the above plus `docker build` on every pull request.
 
 ## Notes
 
-Generated agreements are **drafts** derived from the
+**Preview only.** Generated agreements are drafts derived from the
 [Common Paper](https://commonpaper.com) standards, used under
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). This is a prototype and
-not legal advice.
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (the `*-cover.md`
+fill-in pages are adaptations — see `frontend/templates/LICENSE.txt`). This is a
+prototype, not legal advice — have a qualified lawyer review any document before
+signing.

@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth import CurrentUser
 from app.chat_schema import ChatRequest
 from app.config import settings
 from app.db import get_session
@@ -50,8 +51,8 @@ def chat_status() -> dict[str, bool]:
 
 
 @router.post("/chat")
-async def chat(body: ChatRequest) -> StreamingResponse:
-    """Stream the assistant reply, then a single ``result`` event.
+async def chat(body: ChatRequest, _user: CurrentUser) -> StreamingResponse:
+    """Stream the assistant reply, then a single ``result`` event. Requires auth.
 
     Triage mode (no ``document``): the ``result`` carries the chosen slug.
     Fill mode (``document`` set): the ``result`` carries the extracted fields.

@@ -11,5 +11,5 @@ docker rm -f prelegal >/dev/null 2>&1 || true
 env_arg=()
 [ -f .env ] && env_arg=(--env-file .env)
 
-docker run -d --name prelegal -p 8000:8000 "${env_arg[@]}" prelegal:latest >/dev/null
+docker run -d --name prelegal -p 8000:8000 -v prelegal-data:/app/backend/data "${env_arg[@]}" prelegal:latest >/dev/null
 echo "Prelegal is running at http://localhost:8000"

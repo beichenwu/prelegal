@@ -25,18 +25,23 @@ See **Current state** for what actually exists today.
 Delivered:
 
 - **Marketing site** at `/` (Next.js static export).
-- **Mutual NDA creator** at `/tools/mutual-nda/` — a guided form that builds the
-  Common Paper Mutual NDA and renders it live. Runs **entirely client-side**
-  (`frontend/lib/mutualNda.ts`); it does not call the backend.
+- **Mutual NDA creator** at `/tools/mutual-nda/` with two input modes sharing one
+  live preview and download path:
+  - **Guided form** — builds the Common Paper Mutual NDA client-side
+    (`frontend/lib/mutualNda.ts`).
+  - **AI chat (beta)** (SCRUM-9) — a streaming freechat that asks for the terms
+    and fills the same fields. Calls `POST /api/nda/chat`; the backend does the
+    LLM conversation + field extraction, the frontend keeps assembly and
+    validation. Conversation is client-side only (React state + `localStorage`).
 - **`frontend/` + `backend/` foundation** (SCRUM-8): a FastAPI app serves the
   static frontend at `/` and the API under `/api/*`, backed by a throwaway
   SQLite database, packaged in a single Docker image, with start/stop scripts.
 
 Not built yet:
 
-- AI chat / LLM integration (no code calls an LLM; `OPENROUTER_API_KEY` is unused).
 - User authentication — there is **no** `users` table, sign-up, or sign-in.
-- Backend persistence of documents; the other 10 document types as guided tools.
+- Backend persistence of documents; the other 10 document types (as forms or in
+  the chat).
 
 ## Development process
 
@@ -67,14 +72,23 @@ Dockerfile  Multi-stage: node:20 builds frontend/out -> python:3.12-slim runs
 
 - `config.py` — `Settings` (pydantic-settings). Every value has a default;
   override with `PRELEGAL_`-prefixed env vars (`PRELEGAL_DATABASE_URL`,
-  `PRELEGAL_FRONTEND_DIST`).
+  `PRELEGAL_FRONTEND_DIST`, `PRELEGAL_LLM_MODEL`). `openrouter_api_key` also reads
+  the unprefixed `OPENROUTER_API_KEY`; the repo-root `.env` is loaded when present.
 - `db.py` — engine, `SessionLocal`, `Base`, `init_db()`, `get_session()`
   dependency.
 - `models.py` — SQLAlchemy models. Currently just `app_meta` (a bootstrap
   key/value marker). Real domain tables arrive with the features that need them.
+- `nda_schema.py` — `NdaFields` (partial Pydantic mirror of `NdaFormValues`) and
+  `missing_required()` (mirrors the frontend `validate()`), used by chat extraction.
+- `llm.py` — LiteLLM wrapper: `stream_reply()` (token stream) and
+  `extract_fields()` (non-streamed JSON, one retry, keeps prior fields on failure).
+  Raises `LLMUnavailable` (no key) / `LLMError` (provider/parse failure).
 - `api/routes.py` — `APIRouter(prefix="/api")`. `GET /api/health` does a real
-  DB round-trip; an `/api/*` catch-all keeps unknown API paths as JSON 404s.
-- `main.py` — app factory + lifespan.
+  DB round-trip; `GET /api/nda/chat` reports whether chat is configured;
+  `POST /api/nda/chat` streams `token` events then one `result` event
+  (`reply`, `fields`, `missingFields`, `readyToGenerate`) or an `error` event.
+  An `/api/*` catch-all keeps unknown API paths as JSON 404s.
+- `main.py` — app factory + lifespan. CORS allows `localhost:3000` for `next dev`.
 
 ### Database
 
@@ -84,12 +98,19 @@ container — begins from a known-empty schema. Startup stamps an `initialized_a
 row; `GET /api/health` reads it back. When auth lands, the `users` table is
 created the same way (recreated each start).
 
-## AI design (planned)
+## AI design
 
-When writing code to call LLMs, use LiteLLM via OpenRouter to the best free model
-at your discretion. Use Structured Outputs so results can be parsed and used to
-populate fields in the legal document. `OPENROUTER_API_KEY` is in `.env` at the
-project root.
+Call LLMs through **LiteLLM → OpenRouter**, using a free model. `OPENROUTER_API_KEY`
+is in `.env` at the project root; with no key the chat endpoint reports itself
+disabled and the UI falls back to the form. The default model
+(`PRELEGAL_LLM_MODEL`) is a currently-free instruction model that supports JSON
+responses — swap it if OpenRouter's free tier changes.
+
+The Mutual NDA chat (`app/llm.py`) uses two calls per turn: a streamed
+conversational reply, and a separate non-streamed JSON call that re-reads the
+whole conversation and returns the fields known so far (`response_format`
+`json_object` + schema in the prompt; parsed and validated with Pydantic, one
+retry). Document assembly stays in the frontend.
 
 ## Running & testing
 
@@ -110,6 +131,11 @@ Local development (no Docker):
 cd backend  && uv sync && uv run uvicorn app.main:app --reload   # API on :8000
 cd frontend && npm install && npm run dev                        # site on :3000
 ```
+
+In `next dev` the frontend must be told where the API is:
+`NEXT_PUBLIC_API_BASE=http://localhost:8000` (e.g. in `frontend/.env.local`).
+In the Docker/production path the API is same-origin, so the variable is unset.
+The AI chat additionally needs `OPENROUTER_API_KEY` in the backend's environment.
 
 For the production path locally, `npm run build` in `frontend/` then load
 `http://localhost:8000`.
@@ -139,5 +165,6 @@ cd backend  && uv run ruff check . && uv run pytest
 | [SCRUM-6](https://beichenwu4667.atlassian.net/browse/SCRUM-6) | Mutual NDA creator (prototype) | `/tools/mutual-nda/` — a form for the cover-page terms and both parties, a live-rendered agreement, and Markdown download / print-to-PDF. All client-side (`frontend/lib/mutualNda.ts`). | #4 |
 | [SCRUM-7](https://beichenwu4667.atlassian.net/browse/SCRUM-7) | Input improvement | Autocomplete for the city and governing-law fields in the NDA form: a suggestion list appears on partial input (`frontend/lib/locations.ts`). | #6 |
 | [SCRUM-8](https://beichenwu4667.atlassian.net/browse/SCRUM-8) | V1 product foundation | `frontend/` + `backend/` split; FastAPI serving the static export plus `/api/*`; throwaway SQLite recreated each startup; `GET /api/health`; multi-stage Dockerfile; mac/linux/windows start-stop scripts; CI split into frontend / backend / docker jobs. No auth, no feature port. | #7 |
+| [SCRUM-9](https://beichenwu4667.atlassian.net/browse/SCRUM-9) | AI chat | Streaming freechat mode on the NDA tool (toggle beside the guided form). `POST /api/nda/chat` (SSE) via LiteLLM → OpenRouter; backend streams the reply and extracts fields, frontend merges them into the same live preview. AI asks permission before "generate". Conversation client-side only. NDA only. | #8 |
 
-Backlog (not started): **SCRUM-9** freechat AI document completion · **SCRUM-10** support all catalogued document types · **SCRUM-11** auth, registration, per-user dashboard of past documents, preview-only disclaimer.
+Backlog (not started): **SCRUM-10** support all catalogued document types · **SCRUM-11** auth, registration, per-user dashboard of past documents, preview-only disclaimer.

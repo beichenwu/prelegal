@@ -151,6 +151,12 @@ The default model (`PRELEGAL_LLM_MODEL`) is currently
 `meta-llama/llama-3.3-70b-instruct:free` is no longer free on OpenRouter; swap
 the default again if the free tier changes.
 
+OpenRouter's **free tier is capped account-wide at ~50 requests/day** (no
+credits). When it's exhausted the chat streams an `error` event and the UI shows
+"The AI service is unavailable" — this is expected degradation, not a bug. Unblock
+by waiting for the daily reset, adding $10 of credits (→ 1000/day), or pointing
+`PRELEGAL_LLM_MODEL` at a paid model. The Mutual NDA guided form needs no LLM.
+
 Each user turn is two calls: a streamed conversational reply, then a separate
 non-streamed `response_format: json_object` call that re-reads the whole
 conversation and returns the structured result (in triage: the chosen slug; in
@@ -215,8 +221,8 @@ cd backend  && uv run ruff check . && uv run pytest
 | [SCRUM-6](https://beichenwu4667.atlassian.net/browse/SCRUM-6) | Mutual NDA creator (prototype) | `/tools/mutual-nda/` — a form for the cover-page terms and both parties, a live-rendered agreement, and Markdown download / print-to-PDF. All client-side (`frontend/lib/mutualNda.ts`). | #4 |
 | [SCRUM-7](https://beichenwu4667.atlassian.net/browse/SCRUM-7) | Input improvement | Autocomplete for the city and governing-law fields in the NDA form: a suggestion list appears on partial input (`frontend/lib/locations.ts`). | #6 |
 | [SCRUM-8](https://beichenwu4667.atlassian.net/browse/SCRUM-8) | V1 product foundation | `frontend/` + `backend/` split; FastAPI serving the static export plus `/api/*`; throwaway SQLite recreated each startup; `GET /api/health`; multi-stage Dockerfile; mac/linux/windows start-stop scripts; CI split into frontend / backend / docker jobs. No auth, no feature port. | #7 |
-| [SCRUM-9](https://beichenwu4667.atlassian.net/browse/SCRUM-9) | AI chat | Streaming freechat that fills a document from conversation. `POST /api/chat` (SSE) via LiteLLM → OpenRouter; backend streams the reply and extracts fields, frontend assembles + previews. AI asks permission before "generate". Client-side only. Shipped for the NDA; generalised by SCRUM-10. | branch `feature/SCRUM-9-ai-chat`, PR pending |
-| [SCRUM-10](https://beichenwu4667.atlassian.net/browse/SCRUM-10) | All 11 documents | `/tools/create/` generic AI creator: triage picks the document (or suggests the closest for unsupported asks), then fill collects its fields. Data-driven `frontend/documents/*.json` + adapted `*-cover.md` fill pages + generic `buildDocument`. `/api/nda/chat` → `/api/chat`. NDA guided form kept, unchanged. | branch `feature/SCRUM-10-all-documents`, PR pending |
-| [SCRUM-11](https://beichenwu4667.atlassian.net/browse/SCRUM-11) | Accounts + dashboard | Email/password register + sign in (JWT), `users` + `documents` tables, `/dashboard` for saved drafts (view / re-download / delete), tools gated behind login. SQLite now persists (no drop-on-startup; Docker volume). Preview-only disclaimer in the footer, on the app pages, and appended to every generated document. | branch `feature/SCRUM-11-users`, PR pending |
+| [SCRUM-9](https://beichenwu4667.atlassian.net/browse/SCRUM-9) | AI chat | Streaming freechat that fills a document from conversation. `POST /api/chat` (SSE) via LiteLLM → OpenRouter; backend streams the reply and extracts fields, frontend assembles + previews. AI asks permission before "generate". Client-side only. Shipped for the NDA; generalised by SCRUM-10. | #8 |
+| [SCRUM-10](https://beichenwu4667.atlassian.net/browse/SCRUM-10) | All 11 documents | `/tools/create/` generic AI creator: triage picks the document (or suggests the closest for unsupported asks), then fill collects its fields. Data-driven `frontend/documents/*.json` + adapted `*-cover.md` fill pages + generic `buildDocument`. `/api/nda/chat` → `/api/chat`. NDA guided form kept, unchanged. | #9 |
+| [SCRUM-11](https://beichenwu4667.atlassian.net/browse/SCRUM-11) | Accounts + dashboard | Email/password register + sign in (JWT), `users` + `documents` tables, `/dashboard` for saved drafts (view / re-download / delete), tools gated behind login. SQLite now persists (no drop-on-startup; Docker volume). Preview-only disclaimer in the footer, on the app pages, and appended to every generated document. | #10 |
 
 Backlog: none — SCRUM-1 and SCRUM-5 through SCRUM-11 are all done.

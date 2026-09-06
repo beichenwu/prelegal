@@ -4,9 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { NdaFormValues } from "@/lib/mutualNda";
 import {
   applyExtracted,
-  chatEnabled,
+  chatStatus,
   streamNdaChat,
   type ChatMessage,
+  type ChatStatus,
 } from "@/lib/ndaChat";
 import styles from "./NdaChat.module.css";
 
@@ -23,7 +24,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<ChatStatus | "checking">("checking");
   const [ready, setReady] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
@@ -40,12 +41,14 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
     }
   }, []);
 
-  // Probe whether the server has chat configured.
-  useEffect(() => {
+  const probe = useCallback(() => {
+    setStatus("checking");
     const controller = new AbortController();
-    chatEnabled(controller.signal).then(setEnabled);
+    chatStatus(controller.signal).then(setStatus);
     return () => controller.abort();
   }, []);
+
+  useEffect(() => probe(), [probe]);
 
   useEffect(() => {
     try {
@@ -60,7 +63,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
 
   const send = useCallback(async () => {
     const text = input.trim();
-    if (!text || streaming || enabled === false) return;
+    if (!text || streaming || status !== "enabled") return;
 
     const history = [...messages, { role: "user" as const, content: text }];
     setMessages([...history, { role: "assistant", content: "" }]);
@@ -95,7 +98,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
         });
       } else {
         setError(event.message);
-        if (event.code === "unavailable") setEnabled(false);
+        if (event.code === "unavailable") setStatus("disabled");
         setMessages((prev) =>
           prev[prev.length - 1]?.content === "" ? prev.slice(0, -1) : prev,
         );
@@ -104,7 +107,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
 
     setStreaming(false);
     abortRef.current = null;
-  }, [input, streaming, enabled, messages, values, onChange]);
+  }, [input, streaming, status, messages, values, onChange]);
 
   const reset = () => {
     abortRef.current?.abort();
@@ -115,16 +118,24 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
     setStreaming(false);
   };
 
-  if (enabled === false) {
+  if (status === "disabled" || status === "unreachable") {
     return (
       <div className={styles.panel}>
         <p className={styles.disabled}>
-          {error ??
-            "AI chat isn't available on this server. Use the guided form to continue."}
+          {status === "disabled"
+            ? "AI chat isn't configured on this server (no API key). Use the guided form to continue."
+            : "Can't reach the AI chat service. If the backend was just started, retry — otherwise use the guided form."}
         </p>
+        {status === "unreachable" ? (
+          <button type="button" className="button button--ghost" onClick={probe}>
+            Retry
+          </button>
+        ) : null}
       </div>
     );
   }
+
+  const busy = streaming || status === "checking";
 
   return (
     <div className={styles.panel}>
@@ -193,7 +204,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
           value={input}
           placeholder="Type your message…"
           rows={2}
-          disabled={streaming || enabled === null}
+          disabled={busy}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -214,7 +225,7 @@ export function NdaChat({ values, errors, onChange }: NdaChatProps) {
           <button
             type="submit"
             className="button"
-            disabled={!input.trim() || streaming || enabled === null}
+            disabled={!input.trim() || busy}
           >
             {streaming ? "…" : "Send"}
           </button>

@@ -61,15 +61,22 @@ const PROVIDER_MSG =
 const NETWORK_MSG =
   "Couldn't reach the AI service. Check your connection, or switch to the guided form.";
 
-/** Is the chat configured on the server (i.e. an API key is present)? */
-export async function chatEnabled(signal?: AbortSignal): Promise<boolean> {
+export type ChatStatus = "enabled" | "disabled" | "unreachable";
+
+/**
+ * - `enabled`     — the endpoint answered and a key is configured
+ * - `disabled`    — the endpoint answered but no key is configured
+ * - `unreachable` — no `/api/nda/chat` route / network error (wrong server,
+ *                   backend down, or `NEXT_PUBLIC_API_BASE` unset in `next dev`)
+ */
+export async function chatStatus(signal?: AbortSignal): Promise<ChatStatus> {
   try {
     const res = await fetch(`${API_BASE}/api/nda/chat`, { signal });
-    if (!res.ok) return false;
+    if (!res.ok) return "unreachable";
     const body = (await res.json()) as { enabled?: boolean };
-    return Boolean(body.enabled);
+    return body.enabled ? "enabled" : "disabled";
   } catch {
-    return false;
+    return "unreachable";
   }
 }
 

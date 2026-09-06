@@ -74,9 +74,9 @@ to generate the draft now.
 """
 
 EXTRACTION_SYSTEM_PROMPT = """\
-You extract structured fields for a Mutual NDA from a conversation.
+You maintain a structured record of a Mutual NDA as the conversation unfolds.
 
-Return ONLY a JSON object, no prose, with exactly these keys:
+Return ONLY a JSON object (no prose, no code fences) with exactly these keys:
 purpose (string|null), effectiveDate (string|null, ISO yyyy-mm-dd),
 mndaTermKind ("years"|"until_terminated"|null), mndaTermYears (integer|null),
 confidentialityTermKind ("years"|"perpetuity"|null),
@@ -87,8 +87,16 @@ party1 (object|null), party2 (object|null).
 Each party object has: name (string|null), title (string|null),
 company (string|null), noticeAddress (string|null).
 
-Use null for anything the user has not provided or confirmed. Never invent \
-values. Carry forward everything already established earlier in the conversation.
+Rules:
+- Capture every detail the user has stated, including in passing. "an NDA between
+  Acme Inc and Globex LLC" sets party1.company = "Acme Inc" and
+  party2.company = "Globex LLC". "to evaluate a partnership" is the purpose.
+- The first company mentioned is party1, the second is party2. Keep that
+  assignment stable once established.
+- Carry forward every value from earlier turns; only change one if the user
+  corrects it.
+- Leave a value null only when the user genuinely has not given it. Do not guess.
+- "no modifications", "none", or similar sets modifications = "None."
 """
 
 
